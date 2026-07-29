@@ -9,6 +9,12 @@ A high-performance, native Gboard-style On-Screen Virtual Keyboard built specifi
 
 ---
 
+## 📸 Screenshots & Showcase
+
+![KDE Plasma 6 Virtual Keyboard Screenshot](assets/screenshots/plasma_virtual_keyboard_v1.1.0.png)
+
+---
+
 > [!NOTE]
 > 🤖 **Built with AI Pair-Programming**  
 > This native C++/Qt6/QML project was fully designed, architected, and engineered in pair-programming collaboration with **Google Antigravity AI**. From low-level Linux `/dev/uinput` USB kernel drivers and Wayland protocol integration to Hunspell dictionary parsing and Kirigami QML UI design, the entire codebase was iteratively crafted with AI assistance.
