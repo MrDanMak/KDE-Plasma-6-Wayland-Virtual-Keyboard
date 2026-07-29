@@ -5,7 +5,7 @@ import org.kde.kirigami 2.20 as Kirigami
 
 Rectangle {
     id: settingsPanel
-    color: "#181a1d"
+    color: (typeof root !== "undefined" && root.headerColor) ? root.headerColor : "#181a1d"
     radius: 8
 
     signal closeRequested()
@@ -28,7 +28,7 @@ Rectangle {
 
             Text {
                 text: "Keyboard Settings & Feature Modes"
-                color: "#ffffff"
+                color: (typeof root !== "undefined" && root.textColor) ? root.textColor : "#ffffff"
                 font.pixelSize: 15
                 font.bold: true
                 Layout.fillWidth: true
@@ -60,9 +60,9 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: splitTap.pressed ? "#3daee9" : (root.isSplit ? "#2d3848" : "#23272e")
+                color: splitTap.pressed ? root.accentColor : (root.isSplit ? "#2d3848" : root.keyColor)
                 radius: 8
-                border.color: root.isSplit ? "#3daee9" : "#3e4452"
+                border.color: root.isSplit ? root.accentColor : "#3e4452"
                 border.width: root.isSplit ? 2 : 1
 
                 ColumnLayout {
@@ -78,7 +78,7 @@ Rectangle {
 
                     Text {
                         text: "Split Keyboard"
-                        color: "#ffffff"
+                        color: root.textColor
                         font.pixelSize: 12
                         font.bold: true
                         Layout.alignment: Qt.AlignHCenter
@@ -86,7 +86,7 @@ Rectangle {
 
                     Text {
                         text: root.isSplit ? "ON" : "OFF"
-                        color: root.isSplit ? "#3daee9" : "#8a93a5"
+                        color: root.isSplit ? root.accentColor : "#8a93a5"
                         font.pixelSize: 11
                         font.bold: true
                         Layout.alignment: Qt.AlignHCenter
@@ -103,9 +103,9 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: numTap.pressed ? "#3daee9" : (root.showNumberRow ? "#2d3848" : "#23272e")
+                color: numTap.pressed ? root.accentColor : (root.showNumberRow ? "#2d3848" : root.keyColor)
                 radius: 8
-                border.color: root.showNumberRow ? "#3daee9" : "#3e4452"
+                border.color: root.showNumberRow ? root.accentColor : "#3e4452"
                 border.width: root.showNumberRow ? 2 : 1
 
                 ColumnLayout {
@@ -121,7 +121,7 @@ Rectangle {
 
                     Text {
                         text: "Top 123 Number Row"
-                        color: "#ffffff"
+                        color: root.textColor
                         font.pixelSize: 12
                         font.bold: true
                         Layout.alignment: Qt.AlignHCenter
@@ -129,7 +129,7 @@ Rectangle {
 
                     Text {
                         text: root.showNumberRow ? "ON" : "OFF"
-                        color: root.showNumberRow ? "#3daee9" : "#8a93a5"
+                        color: root.showNumberRow ? root.accentColor : "#8a93a5"
                         font.pixelSize: 11
                         font.bold: true
                         Layout.alignment: Qt.AlignHCenter
@@ -146,7 +146,7 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: langTap.pressed ? "#3daee9" : "#23272e"
+                color: langTap.pressed ? root.accentColor : root.keyColor
                 radius: 8
                 border.color: "#3e4452"
 
@@ -163,7 +163,7 @@ Rectangle {
 
                     Text {
                         text: "Layout: " + root.layoutMode
-                        color: "#ffffff"
+                        color: root.textColor
                         font.pixelSize: 12
                         font.bold: true
                         Layout.alignment: Qt.AlignHCenter
@@ -171,7 +171,7 @@ Rectangle {
 
                     Text {
                         text: "Tap to Switch"
-                        color: "#3daee9"
+                        color: root.accentColor
                         font.pixelSize: 10
                         Layout.alignment: Qt.AlignHCenter
                     }
@@ -195,9 +195,10 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: themeTap.pressed ? "#3daee9" : "#23272e"
+                color: themeTap.pressed ? root.accentColor : root.keyColor
                 radius: 8
-                border.color: "#3e4452"
+                border.color: root.accentColor
+                border.width: 2
 
                 ColumnLayout {
                     anchors.centerIn: parent
@@ -211,8 +212,8 @@ Rectangle {
                     }
 
                     Text {
-                        text: "Theme Palette"
-                        color: "#ffffff"
+                        text: root.currentPalette ? root.currentPalette.name : "Theme Palette"
+                        color: root.textColor
                         font.pixelSize: 12
                         font.bold: true
                         Layout.alignment: Qt.AlignHCenter
@@ -222,7 +223,7 @@ Rectangle {
                         width: 18
                         height: 18
                         radius: 9
-                        color: root.currentThemeColor
+                        color: root.accentColor
                         border.color: "#ffffff"
                         border.width: 1
                         Layout.alignment: Qt.AlignHCenter
@@ -231,7 +232,7 @@ Rectangle {
 
                 TapHandler {
                     id: themeTap
-                    onTapped: root.themeIndex = (root.themeIndex + 1) % root.themeColors.length
+                    onTapped: root.themeIndex = (root.themeIndex + 1) % root.themePalettes.length
                 }
             }
 
@@ -239,9 +240,9 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: handTap.pressed ? "#3daee9" : (root.isOneHanded ? "#2d3848" : "#23272e")
+                color: handTap.pressed ? root.accentColor : (root.isOneHanded ? "#2d3848" : root.keyColor)
                 radius: 8
-                border.color: root.isOneHanded ? "#3daee9" : "#3e4452"
+                border.color: root.isOneHanded ? root.accentColor : "#3e4452"
                 border.width: root.isOneHanded ? 2 : 1
 
                 ColumnLayout {
@@ -257,7 +258,7 @@ Rectangle {
 
                     Text {
                         text: "One-Handed"
-                        color: "#ffffff"
+                        color: root.textColor
                         font.pixelSize: 12
                         font.bold: true
                         Layout.alignment: Qt.AlignHCenter
@@ -265,7 +266,7 @@ Rectangle {
 
                     Text {
                         text: root.isOneHanded ? root.oneHandedSide.toUpperCase() : "OFF"
-                        color: root.isOneHanded ? "#3daee9" : "#8a93a5"
+                        color: root.isOneHanded ? root.accentColor : "#8a93a5"
                         font.pixelSize: 11
                         font.bold: true
                         Layout.alignment: Qt.AlignHCenter
@@ -283,52 +284,6 @@ Rectangle {
                         } else {
                             root.isOneHanded = false;
                         }
-                    }
-                }
-            }
-
-            // 6. Freeform Floating Window
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                color: floatTap.pressed ? "#3daee9" : (root.isFloating ? "#2d3848" : "#23272e")
-                radius: 8
-                border.color: root.isFloating ? "#3daee9" : "#3e4452"
-                border.width: root.isFloating ? 2 : 1
-
-                ColumnLayout {
-                    anchors.centerIn: parent
-                    spacing: 4
-
-                    Kirigami.Icon {
-                        source: "window-pop-out"
-                        Layout.alignment: Qt.AlignHCenter
-                        Layout.preferredWidth: 26
-                        Layout.preferredHeight: 26
-                    }
-
-                    Text {
-                        text: "Floating Window"
-                        color: "#ffffff"
-                        font.pixelSize: 12
-                        font.bold: true
-                        Layout.alignment: Qt.AlignHCenter
-                    }
-
-                    Text {
-                        text: root.isFloating ? "ON" : "OFF"
-                        color: root.isFloating ? "#3daee9" : "#8a93a5"
-                        font.pixelSize: 11
-                        font.bold: true
-                        Layout.alignment: Qt.AlignHCenter
-                    }
-                }
-
-                TapHandler {
-                    id: floatTap
-                    onTapped: {
-                        root.isFloating = !root.isFloating;
-                        settingsPanel.closeRequested();
                     }
                 }
             }

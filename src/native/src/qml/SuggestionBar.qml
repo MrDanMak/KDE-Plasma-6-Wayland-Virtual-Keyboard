@@ -5,7 +5,7 @@ import org.kde.kirigami 2.20 as Kirigami
 
 Rectangle {
     id: bar
-    color: (typeof Kirigami !== "undefined" && Kirigami.Theme.headerBackgroundColor && Kirigami.Theme.headerBackgroundColor.a > 0) ? Kirigami.Theme.headerBackgroundColor : "#232629"
+    color: (typeof root !== "undefined" && root.headerColor) ? root.headerColor : ((typeof Kirigami !== "undefined" && Kirigami.Theme.headerBackgroundColor && Kirigami.Theme.headerBackgroundColor.a > 0) ? Kirigami.Theme.headerBackgroundColor : "#232629")
     radius: 8
 
     signal suggestionClicked(string text)
@@ -15,7 +15,6 @@ Rectangle {
     signal themeToggleRequested()
     signal oneHandedToggleRequested()
     signal numberRowToggleRequested()
-    signal floatingToggleRequested()
     signal layoutToggleRequested()
     signal dismissRequested()
 
@@ -94,9 +93,9 @@ Rectangle {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: sugTap.pressed ? ((typeof Kirigami !== "undefined" && Kirigami.Theme.highlightColor) ? Kirigami.Theme.highlightColor : "#3daee9") : "#2d3139"
+                    color: sugTap.pressed ? ((typeof root !== "undefined" && root.accentColor) ? root.accentColor : "#3daee9") : ((typeof root !== "undefined" && root.keyColor) ? root.keyColor : "#2d3139")
                     radius: 16
-                    border.color: (typeof Kirigami !== "undefined" && Kirigami.Theme.highlightColor) ? Kirigami.Theme.highlightColor : "#3daee9"
+                    border.color: (typeof root !== "undefined" && root.accentColor) ? root.accentColor : "#3daee9"
                     border.width: 1
                 }
 
@@ -104,7 +103,7 @@ Rectangle {
                     id: sugText
                     anchors.centerIn: parent
                     text: modelData
-                    color: "#eff0f1"
+                    color: (typeof root !== "undefined" && root.textColor) ? root.textColor : "#eff0f1"
                     font.pixelSize: 13
                     font.weight: Font.Medium
                 }

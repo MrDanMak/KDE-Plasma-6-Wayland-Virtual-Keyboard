@@ -8,17 +8,9 @@ ApplicationWindow {
     visible: false
     flags: Qt.Window | Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.WindowDoesNotAcceptFocus
 
-    property bool isFloating: false
-
-    property real floatingX: (Screen.desktopAvailableWidth - 620) / 2
-    property real floatingY: (Screen.desktopAvailableHeight - 320) / 2
-    property real floatingWidth: 620
-    property real floatingHeight: 320
-
-    x: isFloating ? floatingX : (isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX)
-    y: isFloating ? floatingY : ((Screen.desktopAvailableY + Screen.desktopAvailableHeight) - height)
-    width: isFloating ? floatingWidth : (isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth)
-    height: isFloating ? floatingHeight : (showNumberRow ? (isSplit ? 340 : 360) : (isSplit ? 290 : 310))
+    x: isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX
+    width: isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth
+    height: showNumberRow ? (isSplit ? 340 : 360) : (isSplit ? 290 : 310)
     color: currentThemeColor
 
     property bool isShift: true
@@ -34,36 +26,43 @@ ApplicationWindow {
 
     property string oneHandedSide: "right"
     property int themeIndex: 0
-    property var themeColors: ["#1b1e20", "#000000", "#1a2436", "#251738"]
-    property color currentThemeColor: themeColors[themeIndex]
+    property var themePalettes: [
+        { name: "Dark Slate",      windowBg: "#1b1e20", headerBg: "#232629", keyBg: "#2d3139", specialBg: "#1f232a", accent: "#3daee9", text: "#eff0f1" },
+        { name: "Pitch Black",     windowBg: "#000000", headerBg: "#0d0d0d", keyBg: "#1a1a1a", specialBg: "#111111", accent: "#00d2ff", text: "#ffffff" },
+        { name: "Midnight Navy",   windowBg: "#0f172a", headerBg: "#1e293b", keyBg: "#334155", specialBg: "#1e293b", accent: "#38bdf8", text: "#f8fafc" },
+        { name: "Material Purple", windowBg: "#1e102a", headerBg: "#2a173b", keyBg: "#3d2354", specialBg: "#2a173b", accent: "#c084fc", text: "#f3e8ff" }
+    ]
+    property var currentPalette: themePalettes[themeIndex]
+    property color currentThemeColor: currentPalette.windowBg
+    property color headerColor: currentPalette.headerBg
+    property color keyColor: currentPalette.keyBg
+    property color specialKeyColor: currentPalette.specialBg
+    property color accentColor: currentPalette.accent
+    property color textColor: currentPalette.text
 
     property string currentWord: ""
     property string lastKey: ""
     property string activeTab: "keyboard" // "keyboard", "emoji", "clipboard", "settings"
 
-    function updateWindowMode() {
+    function updateOneHanded() {
         if (typeof inputMethod !== "undefined" && inputMethod) {
-            inputMethod.setFloating(root.isFloating);
             inputMethod.setOneHanded(root.isOneHanded, root.oneHandedSide === "right");
         }
-        if (!isFloating) {
-            root.x = isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX;
-            root.width = isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth;
-        }
+        root.x = isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX;
+        root.width = isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth;
     }
 
-    Component.onCompleted: updateWindowMode()
+    Component.onCompleted: updateOneHanded()
     onVisibleChanged: {
         if (visible) {
             root.isShift = true;
             root.currentWord = "";
             root.lastKey = "";
-            updateWindowMode();
+            updateOneHanded();
         }
     }
-    onIsFloatingChanged: updateWindowMode()
-    onIsOneHandedChanged: updateWindowMode()
-    onOneHandedSideChanged: updateWindowMode()
+    onIsOneHandedChanged: updateOneHanded()
+    onOneHandedSideChanged: updateOneHanded()
 
     function openToolsMenu() {
         root.activeTab = (root.activeTab === "settings" ? "keyboard" : "settings");
@@ -73,52 +72,6 @@ ApplicationWindow {
         anchors.fill: parent
         anchors.margins: 4
         spacing: 4
-
-        // Floating Mode Header Bar with Native KWin System Drag Handle
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 28
-            visible: root.isFloating
-            color: "#272c34"
-            radius: 6
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: 8
-                anchors.rightMargin: 8
-
-                Kirigami.Icon {
-                    source: "transform-move"
-                    Layout.preferredWidth: 16
-                    Layout.preferredHeight: 16
-                }
-
-                Text {
-                    text: "Plasma Virtual Keyboard (Floating - Drag Header to Move)"
-                    color: "#ffffff"
-                    font.pixelSize: 11
-                    font.weight: Font.Bold
-                    Layout.fillWidth: true
-                }
-
-                Button {
-                    text: "📌 Dock to Bottom"
-                    focusPolicy: Qt.NoFocus
-                    implicitHeight: 22
-                    onClicked: root.isFloating = false
-                }
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.SizeAllCursor
-                onPressed: function(mouse) {
-                    if (typeof root.startSystemMove === "function") {
-                        root.startSystemMove();
-                    }
-                }
-            }
-        }
 
         // Top GBoard Auto-Fill & Suggestion Bar
         SuggestionBar {
@@ -137,7 +90,7 @@ ApplicationWindow {
             onClipboardToggleRequested: root.activeTab = (root.activeTab === "clipboard" ? "keyboard" : "clipboard")
             onSplitToggleRequested: root.isSplit = !root.isSplit
             onNumberRowToggleRequested: root.showNumberRow = !root.showNumberRow
-            onThemeToggleRequested: root.themeIndex = (root.themeIndex + 1) % root.themeColors.length
+            onThemeToggleRequested: root.themeIndex = (root.themeIndex + 1) % root.themePalettes.length
             onOneHandedToggleRequested: {
                 if (!root.isOneHanded) {
                     root.isOneHanded = true;
@@ -148,7 +101,6 @@ ApplicationWindow {
                     root.isOneHanded = false;
                 }
             }
-            onFloatingToggleRequested: root.isFloating = !root.isFloating
             onLayoutToggleRequested: {
                 root.layoutIndex = (root.layoutIndex + 1) % root.availableLayouts.length;
                 root.layoutMode = root.availableLayouts[root.layoutIndex];
@@ -199,42 +151,6 @@ ApplicationWindow {
             SettingsPanel {
                 id: settingsPanel
                 onCloseRequested: root.activeTab = "keyboard"
-            }
-        }
-    }
-
-    // Bottom-Right Corner Grip Handle for Freeform Window Resizing in Floating Mode
-    Item {
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        width: 28
-        height: 28
-        visible: root.isFloating
-        z: 999
-
-        Rectangle {
-            anchors.fill: parent
-            color: "#3daee9"
-            radius: 6
-            border.color: "#ffffff"
-            border.width: 1
-        }
-
-        Kirigami.Icon {
-            anchors.centerIn: parent
-            source: "transform-scale"
-            Layout.preferredWidth: 16
-            Layout.preferredHeight: 16
-            color: "#ffffff"
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.SizeFDiagCursor
-            onPressed: function(mouse) {
-                if (typeof root.startSystemResize === "function") {
-                    root.startSystemResize(Qt.RightEdge | Qt.BottomEdge);
-                }
             }
         }
     }

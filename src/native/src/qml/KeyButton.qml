@@ -46,18 +46,17 @@ Item {
         anchors.fill: parent
         radius: 8
         color: {
-            var activeColor = (typeof Kirigami !== "undefined" && Kirigami.Theme.highlightColor) ? Kirigami.Theme.highlightColor : "#3daee9";
-            var baseColor = control.isAccent ? activeColor : (control.isSpecial ? "#272c34" : "#2d3139");
-            if (typeof Kirigami !== "undefined" && Kirigami.Theme.cardBackgroundColor && Kirigami.Theme.cardBackgroundColor.a > 0) {
-                if (!control.isAccent) baseColor = Kirigami.Theme.cardBackgroundColor;
-            }
+            var activeColor = (typeof root !== "undefined" && root.accentColor) ? root.accentColor : "#3daee9";
+            var specBg = (typeof root !== "undefined" && root.specialKeyColor) ? root.specialKeyColor : "#1f232a";
+            var normBg = (typeof root !== "undefined" && root.keyColor) ? root.keyColor : "#2d3139";
+            var baseColor = control.isAccent ? activeColor : (control.isSpecial ? specBg : normBg);
             return keyTapHandler.pressed ? activeColor : baseColor;
         }
         border.color: keyTapHandler.pressed ? "#ffffff" : "#3e4452"
         border.width: keyTapHandler.pressed ? 2 : 1
 
         Behavior on color {
-            ColorAnimation { duration: 40 }
+            ColorAnimation { duration: 60 }
         }
     }
 
@@ -79,7 +78,7 @@ Item {
             visible: source !== ""
             width: 22
             height: 22
-            color: (control.isAccent || keyTapHandler.pressed) ? "#ffffff" : "#eff0f1"
+            color: (control.isAccent || keyTapHandler.pressed) ? "#ffffff" : ((typeof root !== "undefined" && root.textColor) ? root.textColor : "#eff0f1")
         }
 
         Text {
@@ -88,7 +87,7 @@ Item {
             visible: control.keyIcon === ""
             font.pixelSize: 18
             font.weight: Font.DemiBold
-            color: (control.isAccent || keyTapHandler.pressed) ? "#ffffff" : "#eff0f1"
+            color: (control.isAccent || keyTapHandler.pressed) ? "#ffffff" : ((typeof root !== "undefined" && root.textColor) ? root.textColor : "#eff0f1")
         }
 
         // Small top corner hint for alternate long-press key
@@ -115,9 +114,9 @@ Item {
         closePolicy: Popup.CloseOnPressOutside | Popup.CloseOnEscape
 
         background: Rectangle {
-            color: "#1f232a"
+            color: (typeof root !== "undefined" && root.specialKeyColor) ? root.specialKeyColor : "#1f232a"
             radius: 12
-            border.color: (typeof Kirigami !== "undefined" && Kirigami.Theme.highlightColor) ? Kirigami.Theme.highlightColor : "#3daee9"
+            border.color: (typeof root !== "undefined" && root.accentColor) ? root.accentColor : "#3daee9"
             border.width: 1.5
         }
 
@@ -129,7 +128,7 @@ Item {
                     width: 34
                     height: 38
                     radius: 8
-                    color: altTap.pressed ? ((typeof Kirigami !== "undefined" && Kirigami.Theme.highlightColor) ? Kirigami.Theme.highlightColor : "#3daee9") : "#2d3139"
+                    color: altTap.pressed ? ((typeof root !== "undefined" && root.accentColor) ? root.accentColor : "#3daee9") : ((typeof root !== "undefined" && root.keyColor) ? root.keyColor : "#2d3139")
 
                     Text {
                         anchors.centerIn: parent
