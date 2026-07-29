@@ -11,7 +11,7 @@ A high-performance, native Gboard-style On-Screen Virtual Keyboard built specifi
 
 ## 📸 Screenshots & Showcase
 
-![KDE Plasma 6 Virtual Keyboard Screenshot](assets/screenshots/plasma_virtual_keyboard_v1.1.0.png)
+
 
 ---
 
