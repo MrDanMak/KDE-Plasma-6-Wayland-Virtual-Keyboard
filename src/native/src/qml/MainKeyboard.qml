@@ -97,7 +97,7 @@ ApplicationWindow {
                 }
 
                 Text {
-                    text: "Plasma Virtual Keyboard (Floating - Drag Here to Move)"
+                    text: "Plasma Virtual Keyboard (Floating - Press & Drag Header)"
                     color: "#ffffff"
                     font.pixelSize: 11
                     font.weight: Font.Bold
@@ -123,17 +123,9 @@ ApplicationWindow {
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.SizeAllCursor
-                property point clickPos: "0,0"
-
                 onPressed: {
-                    clickPos = Qt.point(mouse.x, mouse.y);
-                }
-                onPositionChanged: {
-                    if (pressed) {
-                        var deltaX = mouse.x - clickPos.x;
-                        var deltaY = mouse.y - clickPos.y;
-                        root.floatingX = Math.max(10, Math.min(Screen.desktopAvailableWidth - root.width - 10, root.floatingX + deltaX));
-                        root.floatingY = Math.max(10, Math.min(Screen.desktopAvailableHeight - root.height - 10, root.floatingY + deltaY));
+                    if (typeof root.startSystemMove === "function") {
+                        root.startSystemMove();
                     }
                 }
             }
@@ -211,6 +203,41 @@ ApplicationWindow {
                 onPasteSnippet: function(text) {
                     inputMethod.commitText(text)
                     root.activeTab = "keyboard"
+                }
+            }
+        }
+    }
+
+    // Bottom-Right Corner Resize Grip Handle for Floating Mode
+    Item {
+        id: resizeHandle
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        width: 24
+        height: 24
+        visible: root.isFloating
+        z: 999
+
+        Rectangle {
+            anchors.fill: parent
+            color: "#272c34"
+            radius: 4
+            border.color: "#3e4452"
+        }
+
+        Kirigami.Icon {
+            anchors.centerIn: parent
+            source: "transform-scale"
+            Layout.preferredWidth: 14
+            Layout.preferredHeight: 14
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.SizeFDiagCursor
+            onPressed: {
+                if (typeof root.startSystemResize === "function") {
+                    root.startSystemResize(Qt.RightEdge | Qt.BottomEdge);
                 }
             }
         }
