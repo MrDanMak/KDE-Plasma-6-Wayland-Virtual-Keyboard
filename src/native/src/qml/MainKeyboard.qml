@@ -7,28 +7,17 @@ ApplicationWindow {
     id: root
     visible: false
 
-    property string floatPosition: "bottom" // "bottom", "left", "right", "center"
-    property bool isFloating: floatPosition !== "bottom"
+    property bool isFloating: false
 
-    x: {
-        if (floatPosition === "left") return 12;
-        if (floatPosition === "right") return Screen.desktopAvailableWidth - width - 12;
-        if (floatPosition === "center") return (Screen.desktopAvailableWidth - width) / 2;
-        return isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX;
-    }
+    property real floatingX: Screen.desktopAvailableWidth * 0.2
+    property real floatingY: Screen.desktopAvailableHeight * 0.3
+    property real floatingWidth: 620
+    property real floatingHeight: 320
 
-    y: {
-        if (floatPosition === "center") return (Screen.desktopAvailableHeight - height) / 2;
-        return (Screen.desktopAvailableY + Screen.desktopAvailableHeight) - height - (isFloating ? 12 : 0);
-    }
-
-    width: {
-        if (floatPosition === "center") return Math.min(620, Screen.desktopAvailableWidth * 0.85);
-        if (floatPosition === "left" || floatPosition === "right") return Math.min(580, Screen.desktopAvailableWidth * 0.55);
-        return isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth;
-    }
-
-    height: showNumberRow ? (isSplit ? 360 : 400) : (isSplit ? 320 : 360)
+    x: isFloating ? floatingX : (isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX)
+    y: isFloating ? floatingY : ((Screen.desktopAvailableY + Screen.desktopAvailableHeight) - height)
+    width: isFloating ? floatingWidth : (isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth)
+    height: isFloating ? floatingHeight : (showNumberRow ? (isSplit ? 360 : 400) : (isSplit ? 320 : 360))
     color: currentThemeColor
 
     property bool isShift: true
@@ -51,15 +40,17 @@ ApplicationWindow {
     property string lastKey: ""
     property string activeTab: "keyboard"
 
-    function cycleFloatPosition() {
-        if (floatPosition === "bottom") floatPosition = "center";
-        else if (floatPosition === "center") floatPosition = "left";
-        else if (floatPosition === "left") floatPosition = "right";
-        else floatPosition = "bottom";
-    }
-
     function reposition() {
-        // Automatically updates bindings for x, y, width
+        if (!isFloating) {
+            root.x = isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX;
+            root.y = (Screen.desktopAvailableY + Screen.desktopAvailableHeight) - root.height;
+            root.width = isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth;
+        } else {
+            root.x = floatingX;
+            root.y = floatingY;
+            root.width = floatingWidth;
+            root.height = floatingHeight;
+        }
     }
 
     Component.onCompleted: reposition()
@@ -68,7 +59,19 @@ ApplicationWindow {
             root.isShift = true;
             root.currentWord = "";
             root.lastKey = "";
+            reposition();
         }
+    }
+
+    onIsFloatingChanged: {
+        if (typeof inputMethod !== "undefined" && inputMethod) {
+            inputMethod.setFloating(root.isFloating);
+            if (root.isFloating) {
+                inputMethod.setWindowPosition(root.floatingX, root.floatingY);
+                inputMethod.setWindowSize(root.floatingWidth, root.floatingHeight);
+            }
+        }
+        reposition();
     }
 
     function openToolsMenu() {
@@ -80,7 +83,7 @@ ApplicationWindow {
         anchors.margins: 4
         spacing: 4
 
-        // Floating Mode Titlebar with Position Selector
+        // Floating Titlebar with Direct Drag Moving
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 28
@@ -100,7 +103,7 @@ ApplicationWindow {
                 }
 
                 Text {
-                    text: "Plasma Virtual Keyboard (" + root.floatPosition.toUpperCase() + ")"
+                    text: "Plasma Virtual Keyboard (Floating - Drag Titlebar to Move)"
                     color: "#ffffff"
                     font.pixelSize: 11
                     font.weight: Font.Bold
@@ -108,31 +111,31 @@ ApplicationWindow {
                 }
 
                 Button {
-                    text: "↙️ Left"
+                    text: "📌 Dock to Bottom"
                     focusPolicy: Qt.NoFocus
                     implicitHeight: 22
-                    onClicked: root.floatPosition = "left"
+                    onClicked: root.isFloating = false
                 }
+            }
 
-                Button {
-                    text: "⏺ Center"
-                    focusPolicy: Qt.NoFocus
-                    implicitHeight: 22
-                    onClicked: root.floatPosition = "center"
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.SizeAllCursor
+                property point clickPos: "0,0"
+
+                onPressed: {
+                    clickPos = Qt.point(mouse.x, mouse.y);
                 }
-
-                Button {
-                    text: "↘️ Right"
-                    focusPolicy: Qt.NoFocus
-                    implicitHeight: 22
-                    onClicked: root.floatPosition = "right"
-                }
-
-                Button {
-                    text: "📌 Dock"
-                    focusPolicy: Qt.NoFocus
-                    implicitHeight: 22
-                    onClicked: root.floatPosition = "bottom"
+                onPositionChanged: {
+                    if (pressed) {
+                        var deltaX = mouse.x - clickPos.x;
+                        var deltaY = mouse.y - clickPos.y;
+                        root.floatingX += deltaX;
+                        root.floatingY += deltaY;
+                        if (typeof inputMethod !== "undefined" && inputMethod) {
+                            inputMethod.setWindowPosition(root.floatingX, root.floatingY);
+                        }
+                    }
                 }
             }
         }
@@ -165,7 +168,7 @@ ApplicationWindow {
                     root.isOneHanded = false;
                 }
             }
-            onFloatingToggleRequested: root.cycleFloatPosition()
+            onFloatingToggleRequested: root.isFloating = !root.isFloating
             onLayoutToggleRequested: {
                 root.layoutIndex = (root.layoutIndex + 1) % root.availableLayouts.length;
                 root.layoutMode = root.availableLayouts[root.layoutIndex];
@@ -209,6 +212,54 @@ ApplicationWindow {
                 onPasteSnippet: function(text) {
                     inputMethod.commitText(text)
                     root.activeTab = "keyboard"
+                }
+            }
+        }
+    }
+
+    // Bottom-Right Corner Resize Grip Handle for Freeform Window Scaling
+    Item {
+        id: resizeHandle
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        width: 28
+        height: 28
+        visible: root.isFloating
+        z: 999
+
+        Rectangle {
+            anchors.fill: parent
+            color: "#3daee9"
+            radius: 6
+            border.color: "#ffffff"
+            border.width: 1
+        }
+
+        Kirigami.Icon {
+            anchors.centerIn: parent
+            source: "transform-scale"
+            Layout.preferredWidth: 16
+            Layout.preferredHeight: 16
+            color: "#ffffff"
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.SizeFDiagCursor
+            property point clickPos: "0,0"
+
+            onPressed: {
+                clickPos = Qt.point(mouse.x, mouse.y);
+            }
+            onPositionChanged: {
+                if (pressed) {
+                    var deltaX = mouse.x - clickPos.x;
+                    var deltaY = mouse.y - clickPos.y;
+                    root.floatingWidth = Math.max(380, root.floatingWidth + deltaX);
+                    root.floatingHeight = Math.max(220, root.floatingHeight + deltaY);
+                    if (typeof inputMethod !== "undefined" && inputMethod) {
+                        inputMethod.setWindowSize(root.floatingWidth, root.floatingHeight);
+                    }
                 }
             }
         }

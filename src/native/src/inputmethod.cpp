@@ -104,6 +104,20 @@ WaylandInputMethod::~WaylandInputMethod() {
     }
 }
 
+void WaylandInputMethod::setWindowPosition(int x, int y) {
+    if (m_window) {
+        m_window->setX(x);
+        m_window->setY(y);
+    }
+}
+
+void WaylandInputMethod::setWindowSize(int w, int h) {
+    if (m_window) {
+        m_window->setWidth(w);
+        m_window->setHeight(h);
+    }
+}
+
 void WaylandInputMethod::setFloating(bool floating) {
     if (m_isFloating != floating) {
         m_isFloating = floating;
