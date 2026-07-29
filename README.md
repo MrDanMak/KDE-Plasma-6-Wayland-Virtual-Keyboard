@@ -9,9 +9,13 @@ A high-performance, native Gboard-style On-Screen Virtual Keyboard built specifi
 
 ---
 
-## 📸 Screenshots & Showcase
+## 📸 Keyboard Showcase
 
+### Main QWERTY Typing Surface & Auto-Fill Suggestion Bar
+![Main QWERTY Keyboard Surface](assets/screenshots/qwerty_keyboard.png)
 
+### In-Place Keyboard Settings & Feature Modes
+![In-Place Settings Panel](assets/screenshots/settings_panel.png)
 
 ---
 
