@@ -250,7 +250,7 @@ Item {
             }
 
             KeyButton {
-                Layout.preferredWidth: 48
+                Layout.preferredWidth: 44
                 Layout.fillHeight: true
                 keyIcon: "cachyos"
                 isSpecial: true
@@ -261,9 +261,10 @@ Item {
             KeyButton {
                 Layout.preferredWidth: 44
                 Layout.fillHeight: true
-                keyIcon: "language"
+                keyIcon: "configure"
                 isSpecial: true
-                onClicked: inputMethod.toggleTabletMode()
+                ToolTip.text: "Tools & Modes Menu"
+                onClicked: root.openToolsMenu()
             }
 
             KeyButton {

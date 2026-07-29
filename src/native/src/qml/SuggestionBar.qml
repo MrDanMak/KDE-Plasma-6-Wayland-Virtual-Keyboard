@@ -19,6 +19,10 @@ Rectangle {
     signal layoutToggleRequested()
     signal dismissRequested()
 
+    function openToolsMenu() {
+        toolsMenuPopup.open();
+    }
+
     property var candidates: {
         if (typeof swypeEngine !== "undefined" && swypeEngine && typeof inputMethod !== "undefined" && inputMethod) {
             return swypeEngine.getSuggestions(inputMethod.surroundingText);
@@ -68,11 +72,11 @@ Rectangle {
             // Gboard Quick Settings Popup Menu
             Popup {
                 id: toolsMenuPopup
-                y: toolsMenuBtn.height + 4
-                x: 0
+                y: root.isFloating ? 30 : toolsMenuBtn.height + 4
+                x: root.isFloating ? (bar.width - width) / 2 : 0
                 width: 310
                 padding: 10
-                modal: false
+                modal: true
                 focus: false
                 closePolicy: Popup.CloseOnPressOutside | Popup.CloseOnEscape
 
@@ -115,7 +119,7 @@ Rectangle {
                     // 1. Split Mode Option
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 40
+                        height: 38
                         color: splitTap.pressed ? ((typeof Kirigami !== "undefined" && Kirigami.Theme.highlightColor) ? Kirigami.Theme.highlightColor : "#3daee9") : "#2d3139"
                         radius: 8
                         border.color: "#3e4452"
@@ -160,7 +164,7 @@ Rectangle {
                     // 2. Top 123 Number Row Option
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 40
+                        height: 38
                         color: numTap.pressed ? ((typeof Kirigami !== "undefined" && Kirigami.Theme.highlightColor) ? Kirigami.Theme.highlightColor : "#3daee9") : "#2d3139"
                         radius: 8
                         border.color: "#3e4452"
@@ -205,7 +209,7 @@ Rectangle {
                     // 3. Layout Switcher Option
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 40
+                        height: 38
                         color: langTap.pressed ? ((typeof Kirigami !== "undefined" && Kirigami.Theme.highlightColor) ? Kirigami.Theme.highlightColor : "#3daee9") : "#2d3139"
                         radius: 8
                         border.color: "#3e4452"
@@ -258,7 +262,7 @@ Rectangle {
                     // 4. Gboard Theme Palette Option
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 40
+                        height: 38
                         color: themeTap.pressed ? ((typeof Kirigami !== "undefined" && Kirigami.Theme.highlightColor) ? Kirigami.Theme.highlightColor : "#3daee9") : "#2d3139"
                         radius: 8
                         border.color: "#3e4452"
@@ -305,7 +309,7 @@ Rectangle {
                     // 5. One-Handed Mode Option
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 40
+                        height: 38
                         color: handTap.pressed ? ((typeof Kirigami !== "undefined" && Kirigami.Theme.highlightColor) ? Kirigami.Theme.highlightColor : "#3daee9") : "#2d3139"
                         radius: 8
                         border.color: "#3e4452"
@@ -350,7 +354,7 @@ Rectangle {
                     // 6. Floating Window Option
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 40
+                        height: 38
                         color: floatTap.pressed ? ((typeof Kirigami !== "undefined" && Kirigami.Theme.highlightColor) ? Kirigami.Theme.highlightColor : "#3daee9") : "#2d3139"
                         radius: 8
                         border.color: "#3e4452"

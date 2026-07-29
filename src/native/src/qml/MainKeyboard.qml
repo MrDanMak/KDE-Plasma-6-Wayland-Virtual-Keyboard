@@ -6,10 +6,10 @@ import org.kde.kirigami 2.20 as Kirigami
 ApplicationWindow {
     id: root
     visible: false
-    x: isFloating ? floatingX : (isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX)
-    y: isFloating ? floatingY : ((Screen.desktopAvailableY + Screen.desktopAvailableHeight) - height)
-    width: isFloating ? floatingWidth : (isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth)
-    height: isFloating ? floatingHeight : (showNumberRow ? (isSplit ? 360 : 400) : (isSplit ? 320 : 360))
+    x: isFloating ? Math.max(10, Math.min(Screen.desktopAvailableWidth - width - 10, floatingX)) : (isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX)
+    y: isFloating ? Math.max(10, Math.min(Screen.desktopAvailableHeight - height - 10, floatingY)) : ((Screen.desktopAvailableY + Screen.desktopAvailableHeight) - height)
+    width: isFloating ? Math.min(640, Screen.desktopAvailableWidth * 0.8) : (isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth)
+    height: isFloating ? 320 : (showNumberRow ? (isSplit ? 360 : 400) : (isSplit ? 320 : 360))
     color: currentThemeColor
 
     property bool isShift: true
@@ -20,12 +20,12 @@ ApplicationWindow {
     property bool isFloating: false
     property bool showNumberRow: false
 
-    property real floatingX: Screen.desktopAvailableWidth * 0.2
-    property real floatingY: Screen.desktopAvailableHeight * 0.4
+    property real floatingX: Screen.desktopAvailableWidth * 0.1
+    property real floatingY: Screen.desktopAvailableHeight * 0.2
     property real floatingWidth: 620
-    property real floatingHeight: 340
+    property real floatingHeight: 320
 
-    property string layoutMode: "QWERTY" // "QWERTY", "QWERTZ", "AZERTY", "DVORAK"
+    property string layoutMode: "QWERTY"
     property var availableLayouts: ["QWERTY", "QWERTZ", "AZERTY", "DVORAK"]
     property int layoutIndex: 0
 
@@ -36,13 +36,16 @@ ApplicationWindow {
 
     property string currentWord: ""
     property string lastKey: ""
-    property string activeTab: "keyboard" // "keyboard", "emoji", "clipboard"
+    property string activeTab: "keyboard"
 
     function reposition() {
         if (!isFloating) {
             root.x = isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX;
             root.y = (Screen.desktopAvailableY + Screen.desktopAvailableHeight) - root.height;
             root.width = isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth;
+        } else {
+            root.x = Math.max(10, Math.min(Screen.desktopAvailableWidth - root.width - 10, floatingX));
+            root.y = Math.max(10, Math.min(Screen.desktopAvailableHeight - root.height - 10, floatingY));
         }
     }
 
@@ -60,18 +63,22 @@ ApplicationWindow {
     onIsFloatingChanged: reposition()
     onShowNumberRowChanged: reposition()
 
+    function openToolsMenu() {
+        suggestionBar.openToolsMenu();
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 4
         spacing: 4
 
-        // Optional Floating Window Titlebar Drag Handle
+        // Floating Window Header Bar with Prominent "Dock" Button
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 24
+            Layout.preferredHeight: 28
             visible: root.isFloating
             color: "#272c34"
-            radius: 4
+            radius: 6
 
             RowLayout {
                 anchors.fill: parent
@@ -86,16 +93,24 @@ ApplicationWindow {
 
                 Text {
                     text: "Plasma Virtual Keyboard (Floating)"
-                    color: "#8a93a5"
+                    color: "#ffffff"
                     font.pixelSize: 11
                     font.weight: Font.Bold
                     Layout.fillWidth: true
                 }
 
+                // Direct 1-Tap Dock Button
+                Button {
+                    text: "📌 Dock to Bottom"
+                    focusPolicy: Qt.NoFocus
+                    implicitHeight: 22
+                    onClicked: root.isFloating = false
+                }
+
                 ToolButton {
                     icon.name: "window-close"
-                    implicitWidth: 20
-                    implicitHeight: 20
+                    implicitWidth: 22
+                    implicitHeight: 22
                     onClicked: root.isFloating = false
                 }
             }
@@ -103,8 +118,8 @@ ApplicationWindow {
             DragHandler {
                 target: null
                 onTranslationChanged: {
-                    root.floatingX = Math.max(0, Math.min(Screen.desktopAvailableWidth - root.width, root.floatingX + translation.x));
-                    root.floatingY = Math.max(0, Math.min(Screen.desktopAvailableHeight - root.height, root.floatingY + translation.y));
+                    root.floatingX = Math.max(10, Math.min(Screen.desktopAvailableWidth - root.width - 10, root.floatingX + translation.x));
+                    root.floatingY = Math.max(10, Math.min(Screen.desktopAvailableHeight - root.height - 10, root.floatingY + translation.y));
                 }
             }
         }
