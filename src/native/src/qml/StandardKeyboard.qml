@@ -44,9 +44,16 @@ Item {
         }
 
         if (keyIcon === "edit-clear-locationbar-rhs") {
-            inputMethod.deleteSurroundingText(1, 0);
+            var delLen = 1;
+            if (typeof inputMethod !== "undefined" && inputMethod && inputMethod.surroundingText && inputMethod.surroundingText.length > 0) {
+                var lastCharCode = inputMethod.surroundingText.charCodeAt(inputMethod.surroundingText.length - 1);
+                if (lastCharCode >= 0xD800 && lastCharCode <= 0xDFFF) {
+                    delLen = 2;
+                }
+            }
+            inputMethod.deleteSurroundingText(delLen, 0);
             if (root.currentWord.length > 0) {
-                root.currentWord = root.currentWord.substring(0, root.currentWord.length - 1);
+                root.currentWord = root.currentWord.substring(0, Math.max(0, root.currentWord.length - delLen));
             }
             return;
         }
