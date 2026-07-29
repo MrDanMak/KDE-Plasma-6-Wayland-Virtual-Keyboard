@@ -330,11 +330,15 @@ void WaylandInputMethod::deleteSurroundingText(int beforeLength, int afterLength
              << "before:" << beforeLength << "after:" << afterLength;
 
     if (m_context) {
-        zwp_input_method_context_v1_delete_surrounding_text(m_context, -beforeLength, beforeLength + afterLength);
-    } else {
-        for (int i = 0; i < beforeLength; ++i) {
-            emitUInputKey(KEY_BACKSPACE, false);
-        }
+        // If deleting a multi-byte Unicode emoji or surrogate pair, request 2 or 4 byte deletion
+        int count = (beforeLength >= 2) ? 2 : 1;
+        zwp_input_method_context_v1_delete_surrounding_text(m_context, -count, count + afterLength);
+    }
+    
+    // Always emit uinput backspace keypresses as fallback
+    int countKeys = (beforeLength >= 2) ? 2 : 1;
+    for (int i = 0; i < countKeys; ++i) {
+        emitUInputKey(KEY_BACKSPACE, false);
     }
 
     if (m_cursorPosition >= beforeLength && !m_surroundingText.isEmpty()) {
