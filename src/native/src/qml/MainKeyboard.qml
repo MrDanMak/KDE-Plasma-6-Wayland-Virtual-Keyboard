@@ -60,7 +60,12 @@ ApplicationWindow {
     }
     onHeightChanged: reposition()
     onIsOneHandedChanged: reposition()
-    onIsFloatingChanged: reposition()
+    onIsFloatingChanged: {
+        if (typeof inputMethod !== "undefined" && inputMethod) {
+            inputMethod.setFloating(root.isFloating);
+        }
+        reposition();
+    }
     onShowNumberRowChanged: reposition()
 
     function openToolsMenu() {
@@ -72,7 +77,7 @@ ApplicationWindow {
         anchors.margins: 4
         spacing: 4
 
-        // Floating Window Header Bar with Prominent "Dock" Button
+        // Floating Window Header Bar with Drag Handle
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 28
@@ -92,7 +97,7 @@ ApplicationWindow {
                 }
 
                 Text {
-                    text: "Plasma Virtual Keyboard (Floating)"
+                    text: "Plasma Virtual Keyboard (Floating - Drag Here to Move)"
                     color: "#ffffff"
                     font.pixelSize: 11
                     font.weight: Font.Bold
@@ -115,11 +120,21 @@ ApplicationWindow {
                 }
             }
 
-            DragHandler {
-                target: null
-                onTranslationChanged: {
-                    root.floatingX = Math.max(10, Math.min(Screen.desktopAvailableWidth - root.width - 10, root.floatingX + translation.x));
-                    root.floatingY = Math.max(10, Math.min(Screen.desktopAvailableHeight - root.height - 10, root.floatingY + translation.y));
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.SizeAllCursor
+                property point clickPos: "0,0"
+
+                onPressed: {
+                    clickPos = Qt.point(mouse.x, mouse.y);
+                }
+                onPositionChanged: {
+                    if (pressed) {
+                        var deltaX = mouse.x - clickPos.x;
+                        var deltaY = mouse.y - clickPos.y;
+                        root.floatingX = Math.max(10, Math.min(Screen.desktopAvailableWidth - root.width - 10, root.floatingX + deltaX));
+                        root.floatingY = Math.max(10, Math.min(Screen.desktopAvailableHeight - root.height - 10, root.floatingY + deltaY));
+                    }
                 }
             }
         }

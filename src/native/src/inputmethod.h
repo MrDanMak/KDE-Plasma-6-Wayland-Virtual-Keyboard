@@ -18,6 +18,7 @@ class WaylandInputMethod : public QObject {
     Q_OBJECT
     Q_PROPERTY(bool active READ active NOTIFY activeChanged)
     Q_PROPERTY(bool tabletMode READ tabletMode NOTIFY tabletModeChanged)
+    Q_PROPERTY(bool isFloating READ isFloating WRITE setFloating NOTIFY isFloatingChanged)
     Q_PROPERTY(QString surroundingText READ surroundingText NOTIFY surroundingTextChanged)
     Q_PROPERTY(int cursorPosition READ cursorPosition NOTIFY cursorPositionChanged)
 
@@ -27,6 +28,7 @@ public:
 
     bool active() const { return m_active; }
     bool tabletMode() const { return m_tabletMode; }
+    bool isFloating() const { return m_isFloating; }
     QString surroundingText() const { return m_surroundingText; }
     int cursorPosition() const { return m_cursorPosition; }
 
@@ -42,10 +44,12 @@ public:
     Q_INVOKABLE void hideKeyboard();
     Q_INVOKABLE void toggleTabletMode();
     Q_INVOKABLE void playClickSound();
+    Q_INVOKABLE void setFloating(bool floating);
 
 Q_SIGNALS:
     void activeChanged();
     void tabletModeChanged();
+    void isFloatingChanged();
     void surroundingTextChanged();
     void cursorPositionChanged();
     void textCommitted(const QString &text);
@@ -73,6 +77,7 @@ private:
 #endif
     bool m_active = false;
     bool m_tabletMode = false;
+    bool m_isFloating = false;
     QString m_surroundingText;
     int m_cursorPosition = 0;
 };

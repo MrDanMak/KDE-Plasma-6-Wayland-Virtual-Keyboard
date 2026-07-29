@@ -10,6 +10,10 @@
 #include <QProcess>
 #include <QtCore/qnativeinterface.h>
 
+#if defined(HAVE_LAYERSHELLQT)
+#include <LayerShellQt/Window>
+#endif
+
 #include <linux/input.h>
 #include <linux/uinput.h>
 #include <fcntl.h>
@@ -100,6 +104,29 @@ WaylandInputMethod::~WaylandInputMethod() {
     }
 }
 
+void WaylandInputMethod::setFloating(bool floating) {
+    if (m_isFloating != floating) {
+        m_isFloating = floating;
+        qDebug() << "[WaylandInputMethod] Setting floating mode to:" << m_isFloating;
+#if defined(HAVE_LAYERSHELLQT)
+        if (m_window) {
+            LayerShellQt::Window *layerWindow = LayerShellQt::Window::get(m_window);
+            if (layerWindow) {
+                if (m_isFloating) {
+                    layerWindow->setAnchors(LayerShellQt::Window::Anchors());
+                    layerWindow->setExclusiveZone(0);
+                } else {
+                    LayerShellQt::Window::Anchors anchors(LayerShellQt::Window::AnchorBottom | LayerShellQt::Window::AnchorLeft | LayerShellQt::Window::AnchorRight);
+                    layerWindow->setAnchors(anchors);
+                    layerWindow->setExclusiveZone(360);
+                }
+            }
+        }
+#endif
+        Q_EMIT isFloatingChanged();
+    }
+}
+
 void WaylandInputMethod::playClickSound() {
     QProcess::startDetached(QStringLiteral("canberra-gtk-play"), QStringList{QStringLiteral("-i"), QStringLiteral("button-pressed")});
 }
@@ -158,7 +185,6 @@ void WaylandInputMethod::setWindow(QWindow *window) {
 void WaylandInputMethod::setContext(struct zwp_input_method_context_v1 *context) {
     m_context = context;
     qDebug() << "[WaylandInputMethod] Input method context activated by KWin Wayland.";
-    // Only auto-show if tablet touch mode is active (no hardware keyboard attached)
     if (m_tabletMode) {
         showKeyboard();
     }
@@ -191,7 +217,6 @@ void WaylandInputMethod::initWaylandProtocol() {
 void WaylandInputMethod::initDBusInterfaces() {
     QDBusConnection bus = QDBusConnection::sessionBus();
 
-    // Query KWin TabletMode state
     QDBusInterface tabletIface(QStringLiteral("org.kde.KWin"), 
                                QStringLiteral("/org/kde/KWin/TabletModeManager"), 
                                QStringLiteral("org.kde.KWin.TabletModeManager"));
@@ -307,11 +332,11 @@ void WaylandInputMethod::sendKey(int keySym, bool pressed) {
         uint32_t state = pressed ? 1 : 0;
         zwp_input_method_context_v1_keysym(m_context, m_serial++, 0, keySym, state, 0);
     } else {
-        if (keySym == 133 || keySym == 65515) { // Super_L / Meta_L
+        if (keySym == 133 || keySym == 65515) {
             emitUInputKey(KEY_LEFTMETA, false);
-        } else if (keySym == 8) { // Backspace
+        } else if (keySym == 8) {
             emitUInputKey(KEY_BACKSPACE, false);
-        } else if (keySym == 13 || keySym == 10) { // Enter
+        } else if (keySym == 13 || keySym == 10) {
             emitUInputKey(KEY_ENTER, false);
         }
     }
