@@ -291,9 +291,10 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                color: floatTap.pressed ? "#3daee9" : "#23272e"
+                color: floatTap.pressed ? "#3daee9" : (root.isFloating ? "#2d3848" : "#23272e")
                 radius: 8
-                border.color: "#3e4452"
+                border.color: root.isFloating ? "#3daee9" : "#3e4452"
+                border.width: root.isFloating ? 2 : 1
 
                 ColumnLayout {
                     anchors.centerIn: parent
@@ -315,8 +316,8 @@ Rectangle {
                     }
 
                     Text {
-                        text: "LAUNCH"
-                        color: "#3daee9"
+                        text: root.isFloating ? "ON" : "OFF"
+                        color: root.isFloating ? "#3daee9" : "#8a93a5"
                         font.pixelSize: 11
                         font.bold: true
                         Layout.alignment: Qt.AlignHCenter
@@ -326,12 +327,7 @@ Rectangle {
                 TapHandler {
                     id: floatTap
                     onTapped: {
-                        if (floatingWindowLoader) {
-                            floatingWindowLoader.active = true;
-                            if (floatingWindowLoader.item) {
-                                floatingWindowLoader.item.visible = true;
-                            }
-                        }
+                        root.isFloating = !root.isFloating;
                         settingsPanel.closeRequested();
                     }
                 }
