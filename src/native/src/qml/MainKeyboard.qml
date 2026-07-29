@@ -7,17 +7,9 @@ ApplicationWindow {
     id: root
     visible: false
 
-    property bool isFloating: false
-
-    property real floatingX: Screen.desktopAvailableWidth * 0.2
-    property real floatingY: Screen.desktopAvailableHeight * 0.3
-    property real floatingWidth: 620
-    property real floatingHeight: 320
-
-    x: isFloating ? floatingX : (isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX)
-    y: isFloating ? floatingY : ((Screen.desktopAvailableY + Screen.desktopAvailableHeight) - height)
-    width: isFloating ? floatingWidth : (isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth)
-    height: isFloating ? floatingHeight : (showNumberRow ? (isSplit ? 360 : 400) : (isSplit ? 320 : 360))
+    x: isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX
+    width: isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth
+    height: showNumberRow ? (isSplit ? 340 : 360) : (isSplit ? 290 : 310)
     color: currentThemeColor
 
     property bool isShift: true
@@ -41,16 +33,8 @@ ApplicationWindow {
     property string activeTab: "keyboard"
 
     function reposition() {
-        if (!isFloating) {
-            root.x = isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX;
-            root.y = (Screen.desktopAvailableY + Screen.desktopAvailableHeight) - root.height;
-            root.width = isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth;
-        } else {
-            root.x = floatingX;
-            root.y = floatingY;
-            root.width = floatingWidth;
-            root.height = floatingHeight;
-        }
+        root.x = isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX;
+        root.width = isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth;
     }
 
     Component.onCompleted: reposition()
@@ -62,17 +46,7 @@ ApplicationWindow {
             reposition();
         }
     }
-
-    onIsFloatingChanged: {
-        if (typeof inputMethod !== "undefined" && inputMethod) {
-            inputMethod.setFloating(root.isFloating);
-            if (root.isFloating) {
-                inputMethod.setWindowPosition(root.floatingX, root.floatingY);
-                inputMethod.setWindowSize(root.floatingWidth, root.floatingHeight);
-            }
-        }
-        reposition();
-    }
+    onIsOneHandedChanged: reposition()
 
     function openToolsMenu() {
         suggestionBar.openToolsMenu();
@@ -83,62 +57,11 @@ ApplicationWindow {
         anchors.margins: 4
         spacing: 4
 
-        // Floating Titlebar with Continuous Pointer Drag Handling
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 28
-            visible: root.isFloating
-            color: "#272c34"
-            radius: 6
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: 8
-                anchors.rightMargin: 8
-
-                Kirigami.Icon {
-                    source: "transform-move"
-                    Layout.preferredWidth: 16
-                    Layout.preferredHeight: 16
-                }
-
-                Text {
-                    text: "Plasma Virtual Keyboard (Floating - Drag Titlebar to Move)"
-                    color: "#ffffff"
-                    font.pixelSize: 11
-                    font.weight: Font.Bold
-                    Layout.fillWidth: true
-                }
-
-                Button {
-                    text: "📌 Dock to Bottom"
-                    focusPolicy: Qt.NoFocus
-                    implicitHeight: 22
-                    onClicked: root.isFloating = false
-                }
-            }
-
-            DragHandler {
-                target: null
-                onTranslationChanged: {
-                    var newX = root.floatingX + translation.x;
-                    var newY = root.floatingY + translation.y;
-                    root.floatingX = newX;
-                    root.floatingY = newY;
-                    root.x = newX;
-                    root.y = newY;
-                    if (typeof inputMethod !== "undefined" && inputMethod) {
-                        inputMethod.setWindowPosition(newX, newY);
-                    }
-                }
-            }
-        }
-
         // Top GBoard Auto-Fill & Suggestion Bar
         SuggestionBar {
             id: suggestionBar
             Layout.fillWidth: true
-            Layout.preferredHeight: 48
+            Layout.preferredHeight: 46
             onSuggestionClicked: function(text) {
                 if (root.currentWord.length > 0) {
                     inputMethod.deleteSurroundingText(root.currentWord.length, 0);
@@ -162,7 +85,6 @@ ApplicationWindow {
                     root.isOneHanded = false;
                 }
             }
-            onFloatingToggleRequested: root.isFloating = !root.isFloating
             onLayoutToggleRequested: {
                 root.layoutIndex = (root.layoutIndex + 1) % root.availableLayouts.length;
                 root.layoutMode = root.availableLayouts[root.layoutIndex];
@@ -206,48 +128,6 @@ ApplicationWindow {
                 onPasteSnippet: function(text) {
                     inputMethod.commitText(text)
                     root.activeTab = "keyboard"
-                }
-            }
-        }
-    }
-
-    // Bottom-Right Corner Resize Grip Handle for Freeform Window Scaling
-    Item {
-        id: resizeHandle
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        width: 28
-        height: 28
-        visible: root.isFloating
-        z: 999
-
-        Rectangle {
-            anchors.fill: parent
-            color: "#3daee9"
-            radius: 6
-            border.color: "#ffffff"
-            border.width: 1
-        }
-
-        Kirigami.Icon {
-            anchors.centerIn: parent
-            source: "transform-scale"
-            Layout.preferredWidth: 16
-            Layout.preferredHeight: 16
-            color: "#ffffff"
-        }
-
-        DragHandler {
-            target: null
-            onTranslationChanged: {
-                var newW = Math.max(380, root.floatingWidth + translation.x);
-                var newH = Math.max(220, root.floatingHeight + translation.y);
-                root.floatingWidth = newW;
-                root.floatingHeight = newH;
-                root.width = newW;
-                root.height = newH;
-                if (typeof inputMethod !== "undefined" && inputMethod) {
-                    inputMethod.setWindowSize(newW, newH);
                 }
             }
         }

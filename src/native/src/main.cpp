@@ -30,7 +30,6 @@ int main(int argc, char *argv[]) {
 
     const QUrl url(QStringLiteral("qrc:/src/qml/MainKeyboard.qml"));
 
-    // Use DirectConnection so LayerShellQt attaches BEFORE the window is mapped/shown to KWin Wayland
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url, &inputMethod](QObject *obj, const QUrl &objUrl) {
         if (!obj && url == objUrl) {
@@ -50,16 +49,9 @@ int main(int argc, char *argv[]) {
                 LayerShellQt::Window::Anchors anchors(LayerShellQt::Window::AnchorBottom | LayerShellQt::Window::AnchorLeft | LayerShellQt::Window::AnchorRight);
                 layerWindow->setAnchors(anchors);
                 layerWindow->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
-                layerWindow->setExclusiveZone(360); // Pushes active app window up so text fields remain visible, restoring once dismissed
+                layerWindow->setExclusiveZone(320);
             }
 #endif
-            if (window->screen()) {
-                QRect availGeo = window->screen()->availableGeometry();
-                window->setX(availGeo.x());
-                window->setY(availGeo.y() + availGeo.height() - 360);
-                window->setWidth(availGeo.width());
-                window->setHeight(360);
-            }
             window->setVisible(inputMethod.active());
         }
     }, Qt::DirectConnection);
