@@ -6,10 +6,29 @@ import org.kde.kirigami 2.20 as Kirigami
 ApplicationWindow {
     id: root
     visible: false
-    x: isFloating ? Math.max(10, Math.min(Screen.desktopAvailableWidth - width - 10, floatingX)) : (isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX)
-    y: isFloating ? Math.max(10, Math.min(Screen.desktopAvailableHeight - height - 10, floatingY)) : ((Screen.desktopAvailableY + Screen.desktopAvailableHeight) - height)
-    width: isFloating ? Math.min(640, Screen.desktopAvailableWidth * 0.8) : (isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth)
-    height: isFloating ? 320 : (showNumberRow ? (isSplit ? 360 : 400) : (isSplit ? 320 : 360))
+
+    property string floatPosition: "bottom" // "bottom", "left", "right", "center"
+    property bool isFloating: floatPosition !== "bottom"
+
+    x: {
+        if (floatPosition === "left") return 12;
+        if (floatPosition === "right") return Screen.desktopAvailableWidth - width - 12;
+        if (floatPosition === "center") return (Screen.desktopAvailableWidth - width) / 2;
+        return isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX;
+    }
+
+    y: {
+        if (floatPosition === "center") return (Screen.desktopAvailableHeight - height) / 2;
+        return (Screen.desktopAvailableY + Screen.desktopAvailableHeight) - height - (isFloating ? 12 : 0);
+    }
+
+    width: {
+        if (floatPosition === "center") return Math.min(620, Screen.desktopAvailableWidth * 0.85);
+        if (floatPosition === "left" || floatPosition === "right") return Math.min(580, Screen.desktopAvailableWidth * 0.55);
+        return isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth;
+    }
+
+    height: showNumberRow ? (isSplit ? 360 : 400) : (isSplit ? 320 : 360)
     color: currentThemeColor
 
     property bool isShift: true
@@ -17,13 +36,7 @@ ApplicationWindow {
     property bool isSymbols: false
     property bool isSplit: false
     property bool isOneHanded: false
-    property bool isFloating: false
     property bool showNumberRow: false
-
-    property real floatingX: Screen.desktopAvailableWidth * 0.1
-    property real floatingY: Screen.desktopAvailableHeight * 0.2
-    property real floatingWidth: 620
-    property real floatingHeight: 320
 
     property string layoutMode: "QWERTY"
     property var availableLayouts: ["QWERTY", "QWERTZ", "AZERTY", "DVORAK"]
@@ -38,35 +51,25 @@ ApplicationWindow {
     property string lastKey: ""
     property string activeTab: "keyboard"
 
+    function cycleFloatPosition() {
+        if (floatPosition === "bottom") floatPosition = "center";
+        else if (floatPosition === "center") floatPosition = "left";
+        else if (floatPosition === "left") floatPosition = "right";
+        else floatPosition = "bottom";
+    }
+
     function reposition() {
-        if (!isFloating) {
-            root.x = isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX;
-            root.y = (Screen.desktopAvailableY + Screen.desktopAvailableHeight) - root.height;
-            root.width = isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth;
-        } else {
-            root.x = Math.max(10, Math.min(Screen.desktopAvailableWidth - root.width - 10, floatingX));
-            root.y = Math.max(10, Math.min(Screen.desktopAvailableHeight - root.height - 10, floatingY));
-        }
+        // Automatically updates bindings for x, y, width
     }
 
     Component.onCompleted: reposition()
     onVisibleChanged: {
         if (visible) {
-            reposition();
             root.isShift = true;
             root.currentWord = "";
             root.lastKey = "";
         }
     }
-    onHeightChanged: reposition()
-    onIsOneHandedChanged: reposition()
-    onIsFloatingChanged: {
-        if (typeof inputMethod !== "undefined" && inputMethod) {
-            inputMethod.setFloating(root.isFloating);
-        }
-        reposition();
-    }
-    onShowNumberRowChanged: reposition()
 
     function openToolsMenu() {
         suggestionBar.openToolsMenu();
@@ -77,7 +80,7 @@ ApplicationWindow {
         anchors.margins: 4
         spacing: 4
 
-        // Floating Window Header Bar with Drag Handle
+        // Floating Mode Titlebar with Position Selector
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 28
@@ -97,36 +100,39 @@ ApplicationWindow {
                 }
 
                 Text {
-                    text: "Plasma Virtual Keyboard (Floating - Press & Drag Header)"
+                    text: "Plasma Virtual Keyboard (" + root.floatPosition.toUpperCase() + ")"
                     color: "#ffffff"
                     font.pixelSize: 11
                     font.weight: Font.Bold
                     Layout.fillWidth: true
                 }
 
-                // Direct 1-Tap Dock Button
                 Button {
-                    text: "📌 Dock to Bottom"
+                    text: "↙️ Left"
                     focusPolicy: Qt.NoFocus
                     implicitHeight: 22
-                    onClicked: root.isFloating = false
+                    onClicked: root.floatPosition = "left"
                 }
 
-                ToolButton {
-                    icon.name: "window-close"
-                    implicitWidth: 22
+                Button {
+                    text: "⏺ Center"
+                    focusPolicy: Qt.NoFocus
                     implicitHeight: 22
-                    onClicked: root.isFloating = false
+                    onClicked: root.floatPosition = "center"
                 }
-            }
 
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.SizeAllCursor
-                onPressed: {
-                    if (typeof root.startSystemMove === "function") {
-                        root.startSystemMove();
-                    }
+                Button {
+                    text: "↘️ Right"
+                    focusPolicy: Qt.NoFocus
+                    implicitHeight: 22
+                    onClicked: root.floatPosition = "right"
+                }
+
+                Button {
+                    text: "📌 Dock"
+                    focusPolicy: Qt.NoFocus
+                    implicitHeight: 22
+                    onClicked: root.floatPosition = "bottom"
                 }
             }
         }
@@ -159,7 +165,7 @@ ApplicationWindow {
                     root.isOneHanded = false;
                 }
             }
-            onFloatingToggleRequested: root.isFloating = !root.isFloating
+            onFloatingToggleRequested: root.cycleFloatPosition()
             onLayoutToggleRequested: {
                 root.layoutIndex = (root.layoutIndex + 1) % root.availableLayouts.length;
                 root.layoutMode = root.availableLayouts[root.layoutIndex];
@@ -203,41 +209,6 @@ ApplicationWindow {
                 onPasteSnippet: function(text) {
                     inputMethod.commitText(text)
                     root.activeTab = "keyboard"
-                }
-            }
-        }
-    }
-
-    // Bottom-Right Corner Resize Grip Handle for Floating Mode
-    Item {
-        id: resizeHandle
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        width: 24
-        height: 24
-        visible: root.isFloating
-        z: 999
-
-        Rectangle {
-            anchors.fill: parent
-            color: "#272c34"
-            radius: 4
-            border.color: "#3e4452"
-        }
-
-        Kirigami.Icon {
-            anchors.centerIn: parent
-            source: "transform-scale"
-            Layout.preferredWidth: 14
-            Layout.preferredHeight: 14
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.SizeFDiagCursor
-            onPressed: {
-                if (typeof root.startSystemResize === "function") {
-                    root.startSystemResize(Qt.RightEdge | Qt.BottomEdge);
                 }
             }
         }

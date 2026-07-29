@@ -351,7 +351,7 @@ Rectangle {
                         }
                     }
 
-                    // 6. Floating Window Option
+                    // 6. Floating Window Position Option
                     Rectangle {
                         Layout.fillWidth: true
                         height: 38
@@ -372,7 +372,7 @@ Rectangle {
                             }
 
                             Text {
-                                text: "Floating Window Mode"
+                                text: "Floating Window Position"
                                 color: "#eff0f1"
                                 font.pixelSize: 13
                                 font.weight: Font.Medium
@@ -380,7 +380,7 @@ Rectangle {
                             }
 
                             Text {
-                                text: root.isFloating ? "ON" : "OFF"
+                                text: root.floatPosition.toUpperCase()
                                 color: root.isFloating ? "#3daee9" : "#8a93a5"
                                 font.pixelSize: 11
                                 font.bold: true
