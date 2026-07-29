@@ -45,6 +45,7 @@ public:
     Q_INVOKABLE void toggleTabletMode();
     Q_INVOKABLE void playClickSound();
     Q_INVOKABLE void setFloating(bool floating);
+    Q_INVOKABLE void setOneHanded(bool enabled, bool isRight);
     Q_INVOKABLE void setWindowPosition(int x, int y);
     Q_INVOKABLE void setWindowSize(int w, int h);
 

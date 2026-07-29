@@ -32,21 +32,25 @@ ApplicationWindow {
     property string lastKey: ""
     property string activeTab: "keyboard"
 
-    function reposition() {
+    function updateOneHanded() {
+        if (typeof inputMethod !== "undefined" && inputMethod) {
+            inputMethod.setOneHanded(root.isOneHanded, root.oneHandedSide === "right");
+        }
         root.x = isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX;
         root.width = isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth;
     }
 
-    Component.onCompleted: reposition()
+    Component.onCompleted: updateOneHanded()
     onVisibleChanged: {
         if (visible) {
             root.isShift = true;
             root.currentWord = "";
             root.lastKey = "";
-            reposition();
+            updateOneHanded();
         }
     }
-    onIsOneHandedChanged: reposition()
+    onIsOneHandedChanged: updateOneHanded()
+    onOneHandedSideChanged: updateOneHanded()
 
     function openToolsMenu() {
         suggestionBar.openToolsMenu();
@@ -83,6 +87,12 @@ ApplicationWindow {
                     root.oneHandedSide = "left";
                 } else {
                     root.isOneHanded = false;
+                }
+            }
+            onFloatingToggleRequested: {
+                floatingWindowLoader.active = true;
+                if (floatingWindowLoader.item) {
+                    floatingWindowLoader.item.visible = true;
                 }
             }
             onLayoutToggleRequested: {
@@ -131,5 +141,12 @@ ApplicationWindow {
                 }
             }
         }
+    }
+
+    // Lazy Loader for Freeform Floating Window
+    Loader {
+        id: floatingWindowLoader
+        active: false
+        source: "FloatingWindow.qml"
     }
 }

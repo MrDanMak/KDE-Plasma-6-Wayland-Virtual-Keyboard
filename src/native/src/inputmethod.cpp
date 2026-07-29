@@ -104,6 +104,26 @@ WaylandInputMethod::~WaylandInputMethod() {
     }
 }
 
+void WaylandInputMethod::setOneHanded(bool enabled, bool isRight) {
+    qDebug() << "[WaylandInputMethod] Setting one-handed mode enabled:" << enabled << "isRight:" << isRight;
+#if defined(HAVE_LAYERSHELLQT)
+    if (m_window) {
+        LayerShellQt::Window *layerWindow = LayerShellQt::Window::get(m_window);
+        if (layerWindow) {
+            if (enabled) {
+                if (isRight) {
+                    layerWindow->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorBottom | LayerShellQt::Window::AnchorRight));
+                } else {
+                    layerWindow->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorBottom | LayerShellQt::Window::AnchorLeft));
+                }
+            } else {
+                layerWindow->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorBottom | LayerShellQt::Window::AnchorLeft | LayerShellQt::Window::AnchorRight));
+            }
+        }
+    }
+#endif
+}
+
 void WaylandInputMethod::setWindowPosition(int x, int y) {
     if (m_window) {
         m_window->setX(x);
@@ -122,21 +142,6 @@ void WaylandInputMethod::setFloating(bool floating) {
     if (m_isFloating != floating) {
         m_isFloating = floating;
         qDebug() << "[WaylandInputMethod] Setting floating mode to:" << m_isFloating;
-#if defined(HAVE_LAYERSHELLQT)
-        if (m_window) {
-            LayerShellQt::Window *layerWindow = LayerShellQt::Window::get(m_window);
-            if (layerWindow) {
-                if (m_isFloating) {
-                    layerWindow->setAnchors(LayerShellQt::Window::Anchors());
-                    layerWindow->setExclusiveZone(0);
-                } else {
-                    LayerShellQt::Window::Anchors anchors(LayerShellQt::Window::AnchorBottom | LayerShellQt::Window::AnchorLeft | LayerShellQt::Window::AnchorRight);
-                    layerWindow->setAnchors(anchors);
-                    layerWindow->setExclusiveZone(360);
-                }
-            }
-        }
-#endif
         Q_EMIT isFloatingChanged();
     }
 }

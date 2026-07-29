@@ -15,6 +15,7 @@ Rectangle {
     signal themeToggleRequested()
     signal oneHandedToggleRequested()
     signal numberRowToggleRequested()
+    signal floatingToggleRequested()
     signal layoutToggleRequested()
     signal dismissRequested()
 
@@ -345,6 +346,51 @@ Rectangle {
                             id: handTap
                             onTapped: {
                                 bar.oneHandedToggleRequested();
+                                toolsMenuPopup.close();
+                            }
+                        }
+                    }
+
+                    // 6. Freeform Floating Window Option
+                    Rectangle {
+                        Layout.fillWidth: true
+                        height: 38
+                        color: floatTap.pressed ? ((typeof Kirigami !== "undefined" && Kirigami.Theme.highlightColor) ? Kirigami.Theme.highlightColor : "#3daee9") : "#2d3139"
+                        radius: 8
+                        border.color: "#3e4452"
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 10
+                            anchors.rightMargin: 10
+                            spacing: 10
+
+                            Kirigami.Icon {
+                                source: "window-pop-out"
+                                Layout.preferredWidth: 20
+                                Layout.preferredHeight: 20
+                            }
+
+                            Text {
+                                text: "Freeform Floating Window"
+                                color: "#eff0f1"
+                                font.pixelSize: 13
+                                font.weight: Font.Medium
+                                Layout.fillWidth: true
+                            }
+
+                            Text {
+                                text: "LAUNCH"
+                                color: "#3daee9"
+                                font.pixelSize: 11
+                                font.bold: true
+                            }
+                        }
+
+                        TapHandler {
+                            id: floatTap
+                            onTapped: {
+                                bar.floatingToggleRequested();
                                 toolsMenuPopup.close();
                             }
                         }
