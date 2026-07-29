@@ -83,7 +83,7 @@ ApplicationWindow {
         anchors.margins: 4
         spacing: 4
 
-        // Floating Titlebar with Direct Drag Moving
+        // Floating Titlebar with Continuous Pointer Drag Handling
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 28
@@ -118,23 +118,17 @@ ApplicationWindow {
                 }
             }
 
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.SizeAllCursor
-                property point clickPos: "0,0"
-
-                onPressed: {
-                    clickPos = Qt.point(mouse.x, mouse.y);
-                }
-                onPositionChanged: {
-                    if (pressed) {
-                        var deltaX = mouse.x - clickPos.x;
-                        var deltaY = mouse.y - clickPos.y;
-                        root.floatingX += deltaX;
-                        root.floatingY += deltaY;
-                        if (typeof inputMethod !== "undefined" && inputMethod) {
-                            inputMethod.setWindowPosition(root.floatingX, root.floatingY);
-                        }
+            DragHandler {
+                target: null
+                onTranslationChanged: {
+                    var newX = root.floatingX + translation.x;
+                    var newY = root.floatingY + translation.y;
+                    root.floatingX = newX;
+                    root.floatingY = newY;
+                    root.x = newX;
+                    root.y = newY;
+                    if (typeof inputMethod !== "undefined" && inputMethod) {
+                        inputMethod.setWindowPosition(newX, newY);
                     }
                 }
             }
@@ -243,23 +237,17 @@ ApplicationWindow {
             color: "#ffffff"
         }
 
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.SizeFDiagCursor
-            property point clickPos: "0,0"
-
-            onPressed: {
-                clickPos = Qt.point(mouse.x, mouse.y);
-            }
-            onPositionChanged: {
-                if (pressed) {
-                    var deltaX = mouse.x - clickPos.x;
-                    var deltaY = mouse.y - clickPos.y;
-                    root.floatingWidth = Math.max(380, root.floatingWidth + deltaX);
-                    root.floatingHeight = Math.max(220, root.floatingHeight + deltaY);
-                    if (typeof inputMethod !== "undefined" && inputMethod) {
-                        inputMethod.setWindowSize(root.floatingWidth, root.floatingHeight);
-                    }
+        DragHandler {
+            target: null
+            onTranslationChanged: {
+                var newW = Math.max(380, root.floatingWidth + translation.x);
+                var newH = Math.max(220, root.floatingHeight + translation.y);
+                root.floatingWidth = newW;
+                root.floatingHeight = newH;
+                root.width = newW;
+                root.height = newH;
+                if (typeof inputMethod !== "undefined" && inputMethod) {
+                    inputMethod.setWindowSize(newW, newH);
                 }
             }
         }
