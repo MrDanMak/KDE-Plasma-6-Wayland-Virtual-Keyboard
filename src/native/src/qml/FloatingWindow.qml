@@ -6,7 +6,7 @@ import org.kde.kirigami 2.20 as Kirigami
 Window {
     id: floatWin
     visible: true
-    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool
+    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
 
     x: (Screen.desktopAvailableWidth - width) / 2
     y: (Screen.desktopAvailableHeight - height) / 2
@@ -14,12 +14,20 @@ Window {
     height: 320
     color: root.currentThemeColor
 
+    onVisibleChanged: {
+        if (!visible) {
+            root.visible = true;
+        } else {
+            root.visible = false;
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 4
         spacing: 4
 
-        // Floating Titlebar with Direct Drag Handling
+        // Floating Titlebar with Native KWin System Drag Moving
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 30
@@ -56,17 +64,9 @@ Window {
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.SizeAllCursor
-                property point clickPos: "0,0"
-
                 onPressed: function(mouse) {
-                    clickPos = Qt.point(mouse.x, mouse.y);
-                }
-                onPositionChanged: function(mouse) {
-                    if (pressed) {
-                        var deltaX = mouse.x - clickPos.x;
-                        var deltaY = mouse.y - clickPos.y;
-                        floatWin.x += deltaX;
-                        floatWin.y += deltaY;
+                    if (typeof floatWin.startSystemMove === "function") {
+                        floatWin.startSystemMove();
                     }
                 }
             }
@@ -125,7 +125,7 @@ Window {
         }
     }
 
-    // Bottom-Right Corner Grip Handle for Freeform Window Resizing
+    // Bottom-Right Corner Grip Handle for Native KWin System Resizing
     Item {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
@@ -152,17 +152,9 @@ Window {
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.SizeFDiagCursor
-            property point clickPos: "0,0"
-
             onPressed: function(mouse) {
-                clickPos = Qt.point(mouse.x, mouse.y);
-            }
-            onPositionChanged: function(mouse) {
-                if (pressed) {
-                    var deltaX = mouse.x - clickPos.x;
-                    var deltaY = mouse.y - clickPos.y;
-                    floatWin.width = Math.max(380, floatWin.width + deltaX);
-                    floatWin.height = Math.max(220, floatWin.height + deltaY);
+                if (typeof floatWin.startSystemResize === "function") {
+                    floatWin.startSystemResize(Qt.RightEdge | Qt.BottomEdge);
                 }
             }
         }
