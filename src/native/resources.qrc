@@ -1,0 +1,12 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/">
+    <file>src/qml/MainKeyboard.qml</file>
+    <file>src/qml/KeyButton.qml</file>
+    <file>src/qml/EmojiPanel.qml</file>
+    <file>src/qml/SuggestionBar.qml</file>
+    <file>src/qml/SplitKeyboard.qml</file>
+    <file>src/qml/StandardKeyboard.qml</file>
+    <file>src/qml/ClipboardDrawer.qml</file>
+    <file>cachyos.svg</file>
+</qresource>
+</RCC>

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Plasma Virtual Keyboard
+Comment=Native GBoard-style On-Screen Keyboard for KDE Plasma 6 Wayland
+Exec=/home/danm/.local/bin/plasma-virtualkeyboard
+Icon=input-keyboard-virtual
+Terminal=false
+Type=Application
+Categories=Qt;KDE;System;
+X-KDE-Wayland-VirtualKeyboard=true
+NoDisplay=false

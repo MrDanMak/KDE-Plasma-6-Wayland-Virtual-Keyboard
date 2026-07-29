@@ -1,0 +1,17 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+  <interface name="org.kde.kwin.virtualkeyboard">
+    <property name="enabled" type="b" access="readwrite"/>
+    <property name="active" type="b" access="read"/>
+    <property name="visible" type="b" access="read"/>
+    <method name="forceShow"/>
+    <method name="forceHide"/>
+    <signal name="enabledChanged">
+      <arg name="enabled" type="b"/>
+    </signal>
+    <signal name="activeChanged">
+      <arg name="active" type="b"/>
+    </signal>
+  </interface>
+</node>
