@@ -12,12 +12,22 @@
 
 SwypeEngine::SwypeEngine(QObject *parent)
     : QObject(parent), m_root(std::make_shared<TrieNode>()) {
-    loadBritishEnglishDictionary();
+    loadLanguageDictionary(QStringLiteral("en_GB"));
     loadUserDictionary();
 }
 
 SwypeEngine::~SwypeEngine() {
     saveUserDictionary();
+}
+
+void SwypeEngine::setLanguage(const QString &langCode) {
+    if (m_currentLanguage != langCode) {
+        m_currentLanguage = langCode;
+        m_root = std::make_shared<TrieNode>();
+        loadLanguageDictionary(m_currentLanguage);
+        loadUserDictionary();
+        Q_EMIT languageChanged();
+    }
 }
 
 void SwypeEngine::loadUserDictionary() {
@@ -106,104 +116,151 @@ void SwypeEngine::learnWordPair(const QString &prevWord, const QString &nextWord
     learnWord(w2);
 }
 
-void SwypeEngine::loadBritishEnglishDictionary() {
-    // Extensive British English auto-correct, grammar contraction, & typo rules
-    m_britishAutoCorrect = {
-        // British English Spelling Conversions
-        {QStringLiteral("color"), QStringLiteral("colour")},
-        {QStringLiteral("colors"), QStringLiteral("colours")},
-        {QStringLiteral("flavor"), QStringLiteral("flavour")},
-        {QStringLiteral("flavors"), QStringLiteral("flavours")},
-        {QStringLiteral("favor"), QStringLiteral("favour")},
-        {QStringLiteral("favors"), QStringLiteral("favours")},
-        {QStringLiteral("behavior"), QStringLiteral("behaviour")},
-        {QStringLiteral("behaviors"), QStringLiteral("behaviours")},
-        {QStringLiteral("center"), QStringLiteral("centre")},
-        {QStringLiteral("centers"), QStringLiteral("centres")},
-        {QStringLiteral("theater"), QStringLiteral("theatre")},
-        {QStringLiteral("theaters"), QStringLiteral("theatres")},
-        {QStringLiteral("organize"), QStringLiteral("organise")},
-        {QStringLiteral("organization"), QStringLiteral("organisation")},
-        {QStringLiteral("realize"), QStringLiteral("realise")},
-        {QStringLiteral("realized"), QStringLiteral("realised")},
-        {QStringLiteral("minimize"), QStringLiteral("minimise")},
-        {QStringLiteral("minimized"), QStringLiteral("minimised")},
-        {QStringLiteral("analyze"), QStringLiteral("analyse")},
-        {QStringLiteral("program"), QStringLiteral("programme")},
-        {QStringLiteral("defense"), QStringLiteral("defence")},
-        {QStringLiteral("offense"), QStringLiteral("offence")},
-        {QStringLiteral("license"), QStringLiteral("licence")},
+void SwypeEngine::loadLanguageDictionary(const QString &langCode) {
+    qDebug() << "[SwypeEngine] Loading multi-language dictionary for:" << langCode;
 
-        // Grammar Contractions & Pronoun Capitalisation
-        {QStringLiteral("i"), QStringLiteral("I")},
-        {QStringLiteral("im"), QStringLiteral("I'm")},
-        {QStringLiteral("ive"), QStringLiteral("I've")},
-        {QStringLiteral("ill"), QStringLiteral("I'll")},
-        {QStringLiteral("id"), QStringLiteral("I'd")},
-        {QStringLiteral("dont"), QStringLiteral("don't")},
-        {QStringLiteral("cant"), QStringLiteral("can't")},
-        {QStringLiteral("wont"), QStringLiteral("won't")},
-        {QStringLiteral("isnt"), QStringLiteral("isn't")},
-        {QStringLiteral("arent"), QStringLiteral("aren't")},
-        {QStringLiteral("wasnt"), QStringLiteral("wasn't")},
-        {QStringLiteral("werent"), QStringLiteral("weren't")},
-        {QStringLiteral("hasnt"), QStringLiteral("hasn't")},
-        {QStringLiteral("havent"), QStringLiteral("haven't")},
-        {QStringLiteral("hadnt"), QStringLiteral("hadn't")},
-        {QStringLiteral("couldnt"), QStringLiteral("couldn't")},
-        {QStringLiteral("wouldnt"), QStringLiteral("wouldn't")},
-        {QStringLiteral("shouldnt"), QStringLiteral("shouldn't")},
-        {QStringLiteral("thats"), QStringLiteral("that's")},
-        {QStringLiteral("whats"), QStringLiteral("what's")},
-        {QStringLiteral("theres"), QStringLiteral("there's")},
-        {QStringLiteral("hes"), QStringLiteral("he's")},
-        {QStringLiteral("shes"), QStringLiteral("she's")},
-        {QStringLiteral("its"), QStringLiteral("it's")},
+    if (langCode == QStringLiteral("de_DE")) { // German (QWERTZ)
+        m_autoCorrectRules = {
+            {QStringLiteral("dass"), QStringLiteral("dass")},
+            {QStringLiteral("und"), QStringLiteral("und")},
+            {QStringLiteral("nicht"), QStringLiteral("nicht")},
+            {QStringLiteral("uber"), QStringLiteral("über")},
+            {QStringLiteral("oder"), QStringLiteral("oder")}
+        };
+        const QStringList germanTop = {
+            QStringLiteral("die"), QStringLiteral("der"), QStringLiteral("und"), QStringLiteral("in"), QStringLiteral("zu"), QStringLiteral("den"), QStringLiteral("das"), QStringLiteral("nicht"), QStringLiteral("von"), QStringLiteral("sie"),
+            QStringLiteral("ist"), QStringLiteral("des"), QStringLiteral("sich"), QStringLiteral("mit"), QStringLiteral("dem"), QStringLiteral("dass"), QStringLiteral("er"), QStringLiteral("es"), QStringLiteral("ein"), QStringLiteral("ich"),
+            QStringLiteral("auf"), QStringLiteral("so"), QStringLiteral("eine"), QStringLiteral("auch"), QStringLiteral("als"), QStringLiteral("an"), QStringLiteral("nach"), QStringLiteral("wie"), QStringLiteral("im"), QStringLiteral("für")
+        };
+        int p = 5000;
+        for (const QString &w : germanTop) insertWord(w, p--);
+    } else if (langCode == QStringLiteral("fr_FR")) { // French (AZERTY)
+        m_autoCorrectRules = {
+            {QStringLiteral("ca"), QStringLiteral("ça")},
+            {QStringLiteral("etre"), QStringLiteral("être")},
+            {QStringLiteral("tres"), QStringLiteral("très")},
+            {QStringLiteral("deja"), QStringLiteral("déjà")}
+        };
+        const QStringList frenchTop = {
+            QStringLiteral("le"), QStringLiteral("de"), QStringLiteral("un"), QStringLiteral("à"), QStringLiteral("être"), QStringLiteral("et"), QStringLiteral("en"), QStringLiteral("avoir"), QStringLiteral("que"), QStringLiteral("pour"),
+            QStringLiteral("dans"), QStringLiteral("ce"), QStringLiteral("il"), QStringLiteral("qui"), QStringLiteral("ne"), QStringLiteral("sur"), QStringLiteral("se"), QStringLiteral("pas"), QStringLiteral("plus"), QStringLiteral("pouvoir")
+        };
+        int p = 5000;
+        for (const QString &w : frenchTop) insertWord(w, p--);
+    } else if (langCode == QStringLiteral("es_ES")) { // Spanish
+        m_autoCorrectRules = {
+            {QStringLiteral("esta"), QStringLiteral("está")},
+            {QStringLiteral("que"), QStringLiteral("que")},
+            {QStringLiteral("tambien"), QStringLiteral("también")}
+        };
+        const QStringList spanishTop = {
+            QStringLiteral("el"), QStringLiteral("la"), QStringLiteral("que"), QStringLiteral("de"), QStringLiteral("y"), QStringLiteral("en"), QStringLiteral("un"), QStringLiteral("ser"), QStringLiteral("se"), QStringLiteral("no"),
+            QStringLiteral("haber"), QStringLiteral("por"), QStringLiteral("con"), QStringLiteral("su"), QStringLiteral("para"), QStringLiteral("como"), QStringLiteral("estar"), QStringLiteral("tener"), QStringLiteral("le"), QStringLiteral("lo")
+        };
+        int p = 5000;
+        for (const QString &w : spanishTop) insertWord(w, p--);
+    } else { // Default British English (en_GB)
+        m_autoCorrectRules = {
+            {QStringLiteral("color"), QStringLiteral("colour")},
+            {QStringLiteral("colors"), QStringLiteral("colours")},
+            {QStringLiteral("flavor"), QStringLiteral("flavour")},
+            {QStringLiteral("flavors"), QStringLiteral("favours")},
+            {QStringLiteral("favor"), QStringLiteral("favour")},
+            {QStringLiteral("favors"), QStringLiteral("favours")},
+            {QStringLiteral("behavior"), QStringLiteral("behaviour")},
+            {QStringLiteral("behaviors"), QStringLiteral("behaviours")},
+            {QStringLiteral("center"), QStringLiteral("centre")},
+            {QStringLiteral("centers"), QStringLiteral("centres")},
+            {QStringLiteral("theater"), QStringLiteral("theatre")},
+            {QStringLiteral("theaters"), QStringLiteral("theatres")},
+            {QStringLiteral("organize"), QStringLiteral("organise")},
+            {QStringLiteral("organization"), QStringLiteral("organisation")},
+            {QStringLiteral("realize"), QStringLiteral("realise")},
+            {QStringLiteral("realized"), QStringLiteral("realised")},
+            {QStringLiteral("minimize"), QStringLiteral("minimise")},
+            {QStringLiteral("minimized"), QStringLiteral("minimised")},
+            {QStringLiteral("analyze"), QStringLiteral("analyse")},
+            {QStringLiteral("program"), QStringLiteral("programme")},
+            {QStringLiteral("defense"), QStringLiteral("defence")},
+            {QStringLiteral("offense"), QStringLiteral("offence")},
+            {QStringLiteral("license"), QStringLiteral("licence")},
 
-        // Common Typo Auto-Corrections
-        {QStringLiteral("teh"), QStringLiteral("the")},
-        {QStringLiteral("hte"), QStringLiteral("the")},
-        {QStringLiteral("yuo"), QStringLiteral("you")},
-        {QStringLiteral("waht"), QStringLiteral("what")},
-        {QStringLiteral("taht"), QStringLiteral("that")},
-        {QStringLiteral("hvae"), QStringLiteral("have")},
-        {QStringLiteral("wtiu"), QStringLiteral("with")},
-        {QStringLiteral("grammer"), QStringLiteral("grammar")},
-        {QStringLiteral("speling"), QStringLiteral("spelling")},
-        {QStringLiteral("recieve"), QStringLiteral("receive")},
-        {QStringLiteral("seperate"), QStringLiteral("separate")},
-        {QStringLiteral("definately"), QStringLiteral("definitely")},
-        {QStringLiteral("occured"), QStringLiteral("occurred")},
-        {QStringLiteral("untill"), QStringLiteral("until")},
-        {QStringLiteral("goverment"), QStringLiteral("government")},
-        {QStringLiteral("thier"), QStringLiteral("their")},
-        {QStringLiteral("truely"), QStringLiteral("truly")},
-        {QStringLiteral("tomorow"), QStringLiteral("tomorrow")},
-        {QStringLiteral("bussiness"), QStringLiteral("business")},
-        {QStringLiteral("alot"), QStringLiteral("a lot")}
-    };
+            // Grammar Contractions & Pronoun Capitalisation
+            {QStringLiteral("i"), QStringLiteral("I")},
+            {QStringLiteral("im"), QStringLiteral("I'm")},
+            {QStringLiteral("ive"), QStringLiteral("I've")},
+            {QStringLiteral("ill"), QStringLiteral("I'll")},
+            {QStringLiteral("id"), QStringLiteral("I'd")},
+            {QStringLiteral("dont"), QStringLiteral("don't")},
+            {QStringLiteral("cant"), QStringLiteral("can't")},
+            {QStringLiteral("wont"), QStringLiteral("won't")},
+            {QStringLiteral("isnt"), QStringLiteral("isn't")},
+            {QStringLiteral("arent"), QStringLiteral("aren't")},
+            {QStringLiteral("wasnt"), QStringLiteral("wasn't")},
+            {QStringLiteral("werent"), QStringLiteral("weren't")},
+            {QStringLiteral("hasnt"), QStringLiteral("hasn't")},
+            {QStringLiteral("havent"), QStringLiteral("haven't")},
+            {QStringLiteral("hadnt"), QStringLiteral("hadn't")},
+            {QStringLiteral("couldnt"), QStringLiteral("couldn't")},
+            {QStringLiteral("wouldnt"), QStringLiteral("wouldn't")},
+            {QStringLiteral("shouldnt"), QStringLiteral("shouldn't")},
+            {QStringLiteral("thats"), QStringLiteral("that's")},
+            {QStringLiteral("whats"), QStringLiteral("what's")},
+            {QStringLiteral("theres"), QStringLiteral("there's")},
+            {QStringLiteral("hes"), QStringLiteral("he's")},
+            {QStringLiteral("shes"), QStringLiteral("she's")},
+            {QStringLiteral("its"), QStringLiteral("it's")},
 
-    const QStringList topBritishWords = {
-        QStringLiteral("the"), QStringLiteral("be"), QStringLiteral("to"), QStringLiteral("of"), QStringLiteral("and"), QStringLiteral("a"), QStringLiteral("in"), QStringLiteral("that"), QStringLiteral("have"), QStringLiteral("it"),
-        QStringLiteral("for"), QStringLiteral("not"), QStringLiteral("on"), QStringLiteral("with"), QStringLiteral("he"), QStringLiteral("as"), QStringLiteral("you"), QStringLiteral("do"), QStringLiteral("at"), QStringLiteral("this"),
-        QStringLiteral("but"), QStringLiteral("his"), QStringLiteral("by"), QStringLiteral("from"), QStringLiteral("they"), QStringLiteral("we"), QStringLiteral("say"), QStringLiteral("her"), QStringLiteral("she"), QStringLiteral("or"),
-        QStringLiteral("an"), QStringLiteral("will"), QStringLiteral("my"), QStringLiteral("one"), QStringLiteral("all"), QStringLiteral("would"), QStringLiteral("there"), QStringLiteral("their"), QStringLiteral("what"),
-        QStringLiteral("so"), QStringLiteral("up"), QStringLiteral("out"), QStringLiteral("if"), QStringLiteral("about"), QStringLiteral("who"), QStringLiteral("get"), QStringLiteral("which"), QStringLiteral("go"), QStringLiteral("me"),
-        QStringLiteral("when"), QStringLiteral("make"), QStringLiteral("can"), QStringLiteral("like"), QStringLiteral("time"), QStringLiteral("no"), QStringLiteral("just"), QStringLiteral("him"), QStringLiteral("know"), QStringLiteral("take"),
-        QStringLiteral("people"), QStringLiteral("into"), QStringLiteral("year"), QStringLiteral("your"), QStringLiteral("good"), QStringLiteral("some"), QStringLiteral("could"), QStringLiteral("them"), QStringLiteral("see"), QStringLiteral("other"),
-        QStringLiteral("than"), QStringLiteral("then"), QStringLiteral("now"), QStringLiteral("look"), QStringLiteral("only"), QStringLiteral("come"), QStringLiteral("its"), QStringLiteral("over"), QStringLiteral("think"), QStringLiteral("also"),
-        QStringLiteral("back"), QStringLiteral("after"), QStringLiteral("use"), QStringLiteral("two"), QStringLiteral("how"), QStringLiteral("our"), QStringLiteral("work"), QStringLiteral("first"), QStringLiteral("well"), QStringLiteral("way"),
-        QStringLiteral("even"), QStringLiteral("new"), QStringLiteral("want"), QStringLiteral("because"), QStringLiteral("any"), QStringLiteral("these"), QStringLiteral("give"), QStringLiteral("day"), QStringLiteral("most"), QStringLiteral("us"),
-        QStringLiteral("colour"), QStringLiteral("favour"), QStringLiteral("flavour"), QStringLiteral("behaviour"), QStringLiteral("centre"), QStringLiteral("theatre"), QStringLiteral("organisation"), QStringLiteral("realise"), QStringLiteral("minimise"), QStringLiteral("analyse"), QStringLiteral("programme"),
-        QStringLiteral("plasma"), QStringLiteral("kde"), QStringLiteral("wayland"), QStringLiteral("cachyos"), QStringLiteral("virtual"), QStringLiteral("keyboard")
-    };
+            // Typo Auto-Corrections
+            {QStringLiteral("teh"), QStringLiteral("the")},
+            {QStringLiteral("hte"), QStringLiteral("the")},
+            {QStringLiteral("yuo"), QStringLiteral("you")},
+            {QStringLiteral("waht"), QStringLiteral("what")},
+            {QStringLiteral("taht"), QStringLiteral("that")},
+            {QStringLiteral("hvae"), QStringLiteral("have")},
+            {QStringLiteral("wtiu"), QStringLiteral("with")},
+            {QStringLiteral("grammer"), QStringLiteral("grammar")},
+            {QStringLiteral("speling"), QStringLiteral("spelling")},
+            {QStringLiteral("recieve"), QStringLiteral("receive")},
+            {QStringLiteral("seperate"), QStringLiteral("separate")},
+            {QStringLiteral("definately"), QStringLiteral("definitely")},
+            {QStringLiteral("occured"), QStringLiteral("occurred")},
+            {QStringLiteral("untill"), QStringLiteral("until")},
+            {QStringLiteral("goverment"), QStringLiteral("government")},
+            {QStringLiteral("thier"), QStringLiteral("their")},
+            {QStringLiteral("truely"), QStringLiteral("truly")},
+            {QStringLiteral("tomorow"), QStringLiteral("tomorrow")},
+            {QStringLiteral("bussiness"), QStringLiteral("business")},
+            {QStringLiteral("alot"), QStringLiteral("a lot")}
+        };
 
-    int priority = 5000;
-    for (const QString &word : topBritishWords) {
-        insertWord(word, priority--);
+        const QStringList topBritishWords = {
+            QStringLiteral("the"), QStringLiteral("be"), QStringLiteral("to"), QStringLiteral("of"), QStringLiteral("and"), QStringLiteral("a"), QStringLiteral("in"), QStringLiteral("that"), QStringLiteral("have"), QStringLiteral("it"),
+            QStringLiteral("for"), QStringLiteral("not"), QStringLiteral("on"), QStringLiteral("with"), QStringLiteral("he"), QStringLiteral("as"), QStringLiteral("you"), QStringLiteral("do"), QStringLiteral("at"), QStringLiteral("this"),
+            QStringLiteral("but"), QStringLiteral("his"), QStringLiteral("by"), QStringLiteral("from"), QStringLiteral("they"), QStringLiteral("we"), QStringLiteral("say"), QStringLiteral("her"), QStringLiteral("she"), QStringLiteral("or"),
+            QStringLiteral("an"), QStringLiteral("will"), QStringLiteral("my"), QStringLiteral("one"), QStringLiteral("all"), QStringLiteral("would"), QStringLiteral("there"), QStringLiteral("their"), QStringLiteral("what"),
+            QStringLiteral("so"), QStringLiteral("up"), QStringLiteral("out"), QStringLiteral("if"), QStringLiteral("about"), QStringLiteral("who"), QStringLiteral("get"), QStringLiteral("which"), QStringLiteral("go"), QStringLiteral("me"),
+            QStringLiteral("when"), QStringLiteral("make"), QStringLiteral("can"), QStringLiteral("like"), QStringLiteral("time"), QStringLiteral("no"), QStringLiteral("just"), QStringLiteral("him"), QStringLiteral("know"), QStringLiteral("take"),
+            QStringLiteral("people"), QStringLiteral("into"), QStringLiteral("year"), QStringLiteral("your"), QStringLiteral("good"), QStringLiteral("some"), QStringLiteral("could"), QStringLiteral("them"), QStringLiteral("see"), QStringLiteral("other"),
+            QStringLiteral("than"), QStringLiteral("then"), QStringLiteral("now"), QStringLiteral("look"), QStringLiteral("only"), QStringLiteral("come"), QStringLiteral("its"), QStringLiteral("over"), QStringLiteral("think"), QStringLiteral("also"),
+            QStringLiteral("back"), QStringLiteral("after"), QStringLiteral("use"), QStringLiteral("two"), QStringLiteral("how"), QStringLiteral("our"), QStringLiteral("work"), QStringLiteral("first"), QStringLiteral("well"), QStringLiteral("way"),
+            QStringLiteral("even"), QStringLiteral("new"), QStringLiteral("want"), QStringLiteral("because"), QStringLiteral("any"), QStringLiteral("these"), QStringLiteral("give"), QStringLiteral("day"), QStringLiteral("most"), QStringLiteral("us"),
+            QStringLiteral("colour"), QStringLiteral("favour"), QStringLiteral("flavour"), QStringLiteral("behaviour"), QStringLiteral("centre"), QStringLiteral("theatre"), QStringLiteral("organisation"), QStringLiteral("realise"), QStringLiteral("minimise"), QStringLiteral("analyse"), QStringLiteral("programme"),
+            QStringLiteral("plasma"), QStringLiteral("kde"), QStringLiteral("wayland"), QStringLiteral("cachyos"), QStringLiteral("virtual"), QStringLiteral("keyboard")
+        };
+
+        int priority = 5000;
+        for (const QString &word : topBritishWords) {
+            insertWord(word, priority--);
+        }
     }
 
-    QFile dictFile(QStringLiteral("/usr/share/hunspell/en_GB-large.dic"));
+    // Attempt loading system Hunspell dictionary
+    QString dictFileName = QStringLiteral("/usr/share/hunspell/%1.dic").arg(langCode);
+    QFile dictFile(dictFileName);
+    if (!dictFile.exists() && langCode == QStringLiteral("en_GB")) {
+        dictFile.setFileName(QStringLiteral("/usr/share/hunspell/en_GB-large.dic"));
+    }
     if (!dictFile.exists()) {
         dictFile.setFileName(QStringLiteral("/usr/share/dict/words"));
     }
@@ -225,7 +282,7 @@ void SwypeEngine::loadBritishEnglishDictionary() {
             }
         }
         dictFile.close();
-        qDebug() << "[SwypeEngine] Loaded British English dictionary with" << loadedCount << "words!";
+        qDebug() << "[SwypeEngine] Loaded" << langCode << "dictionary with" << loadedCount << "words!";
     }
 }
 
@@ -265,7 +322,6 @@ QStringList SwypeEngine::finishPath() {
     setIsSwyping(false);
     if (m_currentPath.size() < 3) return {};
 
-    // 1. Identify start key and end key
     QChar startChar, endChar;
     double minDistStart = 1e9, minDistEnd = 1e9;
 
@@ -284,46 +340,6 @@ QStringList SwypeEngine::finishPath() {
 
     if (startChar.isNull() || endChar.isNull()) return {};
 
-    // 2. Extract Inflection Turn Points along the trajectory
-    QVector<QChar> inflectionKeys;
-    inflectionKeys.append(startChar);
-
-    for (int i = 1; i < m_currentPath.size() - 1; ++i) {
-        QPointF pPrev = m_currentPath[i - 1];
-        QPointF pCurr = m_currentPath[i];
-        QPointF pNext = m_currentPath[i + 1];
-
-        QPointF v1 = pCurr - pPrev;
-        QPointF v2 = pNext - pCurr;
-
-        double dot = (v1.x() * v2.x() + v1.y() * v2.y());
-        double len1 = qSqrt(v1.x() * v1.x() + v1.y() * v1.y());
-        double len2 = qSqrt(v2.x() * v2.x() + v2.y() * v2.y());
-
-        if (len1 > 0 && len2 > 0) {
-            double cosAngle = dot / (len1 * len2);
-            if (cosAngle < 0.65) { // Sharp direction turn
-                QChar turnKey;
-                double minD = 1e9;
-                for (auto it = m_keyPositions.begin(); it != m_keyPositions.end(); ++it) {
-                    double d = distance(pCurr, it.value());
-                    if (d < minD) {
-                        minD = d;
-                        turnKey = it.key();
-                    }
-                }
-                if (!turnKey.isNull() && (inflectionKeys.isEmpty() || inflectionKeys.last() != turnKey)) {
-                    inflectionKeys.append(turnKey);
-                }
-            }
-        }
-    }
-
-    if (inflectionKeys.isEmpty() || inflectionKeys.last() != endChar) {
-        inflectionKeys.append(endChar);
-    }
-
-    // 3. Score Trie Candidates by spatial distance matching & start/end key rules
     struct MatchCandidate {
         QString word;
         double score;
@@ -335,7 +351,6 @@ QStringList SwypeEngine::finishPath() {
         if (!node) return;
         if (node->isEndOfWord) {
             if (word.startsWith(startChar) && word.endsWith(endChar)) {
-                // Compute spatial trajectory alignment score
                 double totalDist = 0;
                 int pathIdx = 0;
                 for (QChar ch : word) {
@@ -432,8 +447,8 @@ void SwypeEngine::setIsSwyping(bool swyping) {
 
 QString SwypeEngine::getAutoCorrect(const QString &word) {
     QString lower = word.trimmed().toLower();
-    if (m_britishAutoCorrect.contains(lower)) {
-        return m_britishAutoCorrect.value(lower);
+    if (m_autoCorrectRules.contains(lower)) {
+        return m_autoCorrectRules.value(lower);
     }
     return word;
 }
@@ -442,14 +457,12 @@ QString SwypeEngine::getSpellingCorrection(const QString &word) {
     QString lower = word.trimmed().toLower();
     if (lower.isEmpty()) return word;
 
-    // Check exact auto-correct table FIRST (handles i -> I, im -> I'm, dont -> don't, etc.)
-    if (m_britishAutoCorrect.contains(lower)) {
-        return m_britishAutoCorrect.value(lower);
+    if (m_autoCorrectRules.contains(lower)) {
+        return m_autoCorrectRules.value(lower);
     }
 
     if (lower.length() < 3) return word;
 
-    // Traverse Trie for fuzzy spelling correction with Levenshtein distance = 1
     struct BestMatch {
         QString word;
         int distance;
@@ -520,8 +533,8 @@ QStringList SwypeEngine::getSuggestions(const QString &currentText) {
 
     QStringList suggestions;
 
-    if (m_britishAutoCorrect.contains(lastWord)) {
-        suggestions.append(m_britishAutoCorrect.value(lastWord));
+    if (m_autoCorrectRules.contains(lastWord)) {
+        suggestions.append(m_autoCorrectRules.value(lastWord));
     }
 
     auto current = m_root;

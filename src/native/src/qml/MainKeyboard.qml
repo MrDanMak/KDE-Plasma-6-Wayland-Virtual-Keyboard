@@ -141,6 +141,11 @@ ApplicationWindow {
             onLayoutToggleRequested: {
                 root.layoutIndex = (root.layoutIndex + 1) % root.availableLayouts.length;
                 root.layoutMode = root.availableLayouts[root.layoutIndex];
+                if (typeof swypeEngine !== "undefined" && swypeEngine) {
+                    if (root.layoutMode === "QWERTZ") swypeEngine.setLanguage("de_DE");
+                    else if (root.layoutMode === "AZERTY") swypeEngine.setLanguage("fr_FR");
+                    else swypeEngine.setLanguage("en_GB");
+                }
             }
             onDismissRequested: inputMethod.hideKeyboard()
         }
