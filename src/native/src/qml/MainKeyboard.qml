@@ -30,7 +30,7 @@ ApplicationWindow {
 
     property string currentWord: ""
     property string lastKey: ""
-    property string activeTab: "keyboard"
+    property string activeTab: "keyboard" // "keyboard", "emoji", "clipboard", "settings"
 
     function updateOneHanded() {
         if (typeof inputMethod !== "undefined" && inputMethod) {
@@ -53,7 +53,7 @@ ApplicationWindow {
     onOneHandedSideChanged: updateOneHanded()
 
     function openToolsMenu() {
-        suggestionBar.openToolsMenu();
+        root.activeTab = (root.activeTab === "settings" ? "keyboard" : "settings");
     }
 
     ColumnLayout {
@@ -111,9 +111,9 @@ ApplicationWindow {
         StackLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            currentIndex: root.activeTab === "emoji" ? 1 : (root.activeTab === "clipboard" ? 2 : 0)
+            currentIndex: root.activeTab === "emoji" ? 1 : (root.activeTab === "clipboard" ? 2 : (root.activeTab === "settings" ? 3 : 0))
 
-            // Standard / Split QWERTY Grid View
+            // 0: Standard / Split QWERTY Grid View
             Item {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -124,7 +124,7 @@ ApplicationWindow {
                 }
             }
 
-            // Rich Categorized Emoji Picker
+            // 1: Rich Categorized Emoji Picker
             EmojiPanel {
                 id: emojiPanel
                 onEmojiSelected: function(emoji) {
@@ -132,13 +132,19 @@ ApplicationWindow {
                 }
             }
 
-            // Clipboard History Manager
+            // 2: Clipboard History Manager
             ClipboardDrawer {
                 id: clipboardDrawer
                 onPasteSnippet: function(text) {
                     inputMethod.commitText(text)
                     root.activeTab = "keyboard"
                 }
+            }
+
+            // 3: Full In-Place Keyboard Settings View
+            SettingsPanel {
+                id: settingsPanel
+                onCloseRequested: root.activeTab = "keyboard"
             }
         }
     }
