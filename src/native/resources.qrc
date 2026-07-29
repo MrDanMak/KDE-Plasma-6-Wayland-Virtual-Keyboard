@@ -7,7 +7,6 @@
     <file>src/qml/SplitKeyboard.qml</file>
     <file>src/qml/StandardKeyboard.qml</file>
     <file>src/qml/ClipboardDrawer.qml</file>
-    <file>src/qml/FloatingWindow.qml</file>
     <file>src/qml/SettingsPanel.qml</file>
     <file>cachyos.svg</file>
 </qresource>

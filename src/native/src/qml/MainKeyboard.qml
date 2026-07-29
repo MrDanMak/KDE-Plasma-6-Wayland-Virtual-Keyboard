@@ -6,10 +6,19 @@ import org.kde.kirigami 2.20 as Kirigami
 ApplicationWindow {
     id: root
     visible: false
+    flags: Qt.Window | Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.WindowDoesNotAcceptFocus
 
-    x: isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX
-    width: isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth
-    height: showNumberRow ? (isSplit ? 340 : 360) : (isSplit ? 290 : 310)
+    property bool isFloating: false
+
+    property real floatingX: (Screen.desktopAvailableWidth - 620) / 2
+    property real floatingY: (Screen.desktopAvailableHeight - 320) / 2
+    property real floatingWidth: 620
+    property real floatingHeight: 320
+
+    x: isFloating ? floatingX : (isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX)
+    y: isFloating ? floatingY : ((Screen.desktopAvailableY + Screen.desktopAvailableHeight) - height)
+    width: isFloating ? floatingWidth : (isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth)
+    height: isFloating ? floatingHeight : (showNumberRow ? (isSplit ? 340 : 360) : (isSplit ? 290 : 310))
     color: currentThemeColor
 
     property bool isShift: true
@@ -32,25 +41,29 @@ ApplicationWindow {
     property string lastKey: ""
     property string activeTab: "keyboard" // "keyboard", "emoji", "clipboard", "settings"
 
-    function updateOneHanded() {
+    function updateWindowMode() {
         if (typeof inputMethod !== "undefined" && inputMethod) {
+            inputMethod.setFloating(root.isFloating);
             inputMethod.setOneHanded(root.isOneHanded, root.oneHandedSide === "right");
         }
-        root.x = isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX;
-        root.width = isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth;
+        if (!isFloating) {
+            root.x = isOneHanded ? (oneHandedSide === "right" ? Screen.desktopAvailableWidth * 0.35 : 0) : Screen.desktopAvailableX;
+            root.width = isOneHanded ? Screen.desktopAvailableWidth * 0.65 : Screen.desktopAvailableWidth;
+        }
     }
 
-    Component.onCompleted: updateOneHanded()
+    Component.onCompleted: updateWindowMode()
     onVisibleChanged: {
         if (visible) {
             root.isShift = true;
             root.currentWord = "";
             root.lastKey = "";
-            updateOneHanded();
+            updateWindowMode();
         }
     }
-    onIsOneHandedChanged: updateOneHanded()
-    onOneHandedSideChanged: updateOneHanded()
+    onIsFloatingChanged: updateWindowMode()
+    onIsOneHandedChanged: updateWindowMode()
+    onOneHandedSideChanged: updateWindowMode()
 
     function openToolsMenu() {
         root.activeTab = (root.activeTab === "settings" ? "keyboard" : "settings");
@@ -60,6 +73,52 @@ ApplicationWindow {
         anchors.fill: parent
         anchors.margins: 4
         spacing: 4
+
+        // Floating Mode Header Bar with Native KWin System Drag Handle
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 28
+            visible: root.isFloating
+            color: "#272c34"
+            radius: 6
+
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 8
+                anchors.rightMargin: 8
+
+                Kirigami.Icon {
+                    source: "transform-move"
+                    Layout.preferredWidth: 16
+                    Layout.preferredHeight: 16
+                }
+
+                Text {
+                    text: "Plasma Virtual Keyboard (Floating - Drag Header to Move)"
+                    color: "#ffffff"
+                    font.pixelSize: 11
+                    font.weight: Font.Bold
+                    Layout.fillWidth: true
+                }
+
+                Button {
+                    text: "📌 Dock to Bottom"
+                    focusPolicy: Qt.NoFocus
+                    implicitHeight: 22
+                    onClicked: root.isFloating = false
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.SizeAllCursor
+                onPressed: function(mouse) {
+                    if (typeof root.startSystemMove === "function") {
+                        root.startSystemMove();
+                    }
+                }
+            }
+        }
 
         // Top GBoard Auto-Fill & Suggestion Bar
         SuggestionBar {
@@ -89,12 +148,7 @@ ApplicationWindow {
                     root.isOneHanded = false;
                 }
             }
-            onFloatingToggleRequested: {
-                floatingWindowLoader.active = true;
-                if (floatingWindowLoader.item) {
-                    floatingWindowLoader.item.visible = true;
-                }
-            }
+            onFloatingToggleRequested: root.isFloating = !root.isFloating
             onLayoutToggleRequested: {
                 root.layoutIndex = (root.layoutIndex + 1) % root.availableLayouts.length;
                 root.layoutMode = root.availableLayouts[root.layoutIndex];
@@ -149,10 +203,39 @@ ApplicationWindow {
         }
     }
 
-    // Lazy Loader for Freeform Floating Window
-    Loader {
-        id: floatingWindowLoader
-        active: false
-        source: "FloatingWindow.qml"
+    // Bottom-Right Corner Grip Handle for Freeform Window Resizing in Floating Mode
+    Item {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        width: 28
+        height: 28
+        visible: root.isFloating
+        z: 999
+
+        Rectangle {
+            anchors.fill: parent
+            color: "#3daee9"
+            radius: 6
+            border.color: "#ffffff"
+            border.width: 1
+        }
+
+        Kirigami.Icon {
+            anchors.centerIn: parent
+            source: "transform-scale"
+            Layout.preferredWidth: 16
+            Layout.preferredHeight: 16
+            color: "#ffffff"
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.SizeFDiagCursor
+            onPressed: function(mouse) {
+                if (typeof root.startSystemResize === "function") {
+                    root.startSystemResize(Qt.RightEdge | Qt.BottomEdge);
+                }
+            }
+        }
     }
 }
